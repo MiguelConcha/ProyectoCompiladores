@@ -1,6 +1,8 @@
 %{
 	#include <iostream>
-	#include "tokens.h"
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include "parser.tab.h"
 	using namespace std;
 	void error_lexico(string);
 %}
@@ -26,7 +28,7 @@ caracter '[\x00-\x26\x28-\x7F]'
 "/*"					{ BEGIN(comentario); }
 <comentario>[^"*/"]*	{ }
 <comentario>"*/"		{ BEGIN(INITIAL); } 
-<comentario><<EOF>>		{ error_lexico("Error léxico: faltó cerrar el comentario."); }
+<comentario><<EOF>>		{ error_lexico("Error léxico: faltó cerrar el comentario."); exit(1); }
 
 int						{ cout << "inttype" << endl; return INTTYPE; }
 float					{ cout << "floatype" << endl; return FLOATTYPE; }
@@ -42,8 +44,9 @@ struct 					{ cout << "struct" << endl; return STRUCT; }
 "]"						{ cout << "rbracket" << endl; return RBRACKET; }
 "("						{ cout << "lpar" << endl; return LPAR; }
 ")"						{ cout << "rpar" << endl; return RPAR; }
+","						{ cout << "comma" << endl; return COMMA; }
 ";"						{ cout << "semicolon" << endl; return SEMICOLON; }
-"."						{ cout << "point" << endl; return POINT; }
+"."						{ cout << "dot" << endl; return DOT; }
 
 true					{ cout << "true" << endl; return TRUE; }
 false					{ cout << "false" << endl; return FALSE; }
@@ -51,12 +54,14 @@ false					{ cout << "false" << endl; return FALSE; }
 if						{ cout << "if" << endl; return IF; }
 else					{ cout << "else" << endl; return ELSE; }
 while 					{ cout << "while" << endl; return WHILE; }
+for 					{ cout << "for" << endl; return FOR; }
 do						{ cout << "do" << endl; return DO; }
 switch 					{ cout << "switch" << endl; return SWITCH; }
 case{TP}				{ cout << "case" << endl; return CASE; }
 default{TP}				{ cout << "default" << endl; return DEFAULT; }
 break					{ cout << "break" << endl; return BREAK; }
 print					{ cout << "print" << endl; return PRINT; }
+return					{ cout << "return" << endl; return RETURN; }
 
 "&&"					{ cout << "AND" << endl; return AND; }
 "||"					{ cout << "OR" << endl; return OR; }
@@ -66,25 +71,26 @@ print					{ cout << "print" << endl; return PRINT; }
 "<="					{ cout << "LEQ" << endl; return LEQ; }
 "!="					{ cout << "NEQ" << endl; return NEQ; }
 "=="					{ cout << "EQ" << endl; return EQ; }
+"!"						{ cout << "NOT" << endl; return NOT; }
+"+"						{ cout << "PLUS" << endl; return PLUS; }
+"-"						{ cout << "MINUS" << endl; return MINUS; }
+"*"						{ cout << "PROD" << endl; return PROD; }
+"/"						{ cout << "DIV" << endl; return DIV; }
+"%"						{ cout << "MOD" << endl; return MOD; }
+"="						{ cout << "ASSIG" << endl; return ASSIG; }
 
-{caracter}				{ cout << "CARACTER" << endl; return FLOAT; }
-{cadena}				{ cout << "CADENA" << endl; return FLOAT; }
+{caracter}				{ cout << "CARACTER" << endl; return CARACTER; }
+{cadena}				{ cout << "CADENA" << endl; return CADENA; }
 {ID}					{ cout << "ID" << endl; return ID; }
 {int}					{ cout << "INT" << endl; return INT; }
 {double}				{ cout << "DOUBLE" << endl; return DOUBLE; }
 {float}					{ cout << "FLOAT" << endl; return FLOAT; }
 
-[ \t\r\f]				{ }
-<<EOF>>					{ return END; }
+[ \t\n\r\f]				{ }
 .						{ error_lexico("Ocurrió un error léxico."); }
 
 %%
 
 void error_lexico(string cadena) {
 	cout << cadena << endl;
-}
-
-int main() {
-	yylex();
-	return 0;
 }
