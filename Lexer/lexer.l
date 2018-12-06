@@ -80,20 +80,20 @@ return					{ increment(yytext); return RETURN; }
 "%"						{ increment(yytext); return MOD; }
 "="						{ increment(yytext); return ASSIG; }
 
-{caracter}				{ increment(yytext); /*yylval.car.type = 3; yylval.car.val = yytext[0];*/ return CARACTER; }
-{cadena}				{ increment(yytext); /*strcpy(yylval.cad.val, yytext);*/ return CADENA; }
-{ID}					{ increment(yytext); /*strcpy(yylval.id, yytext);*/ return ID; }
+{caracter}				{ increment(yytext); yylval.car.type = 3; yylval.car.val = yytext[0]; return CARACTER; }
+{cadena}				{ increment(yytext); strcpy(yylval.cad.val, yytext); return CADENA; }
+{ID}					{ increment(yytext); strcpy(yylval.id, yytext); return ID; }
 {int}					{ increment(yytext); 
-						 /* yylval.num.type = 0; 
-						  strcpy(yylval.num.val, yytext);*/ 
+						  yylval.num.type = 0; 
+						  strcpy(yylval.num.val, yytext); 
 						  return INT; }
 {double}				{ increment(yytext); 
-					      /*yylval.num.type = 2;
-						  strcpy(yylval.num.val, yytext);*/ 
+					      yylval.num.type = 2;
+						  strcpy(yylval.num.val, yytext); 
 						  return DOUBLE; }
 {float}					{ increment(yytext); 
-						 /* yylval.num.type = 1;
-						  strcpy(yylval.num.val, yytext);*/ 
+						  yylval.num.type = 1;
+						  strcpy(yylval.num.val, yytext); 
 						  return FLOAT; }
 
 [ \t\r\f\b]+			{ increment(yytext); }

@@ -23,6 +23,7 @@
 	int current_type;
 	int current_dim;
 	int current_arr_type;
+	int current_dim_arr;
 
 	/* Varaibles para contar las temporales, etiquetas e indices */
 	int label;
@@ -120,13 +121,13 @@
 %%
 
 prog:
-	{ printf("kk\n"); init(); } decls 
+	{ init(); } decls 
 	{ print_type_table(&tabla_de_tipos); print_table(&tabla_de_simbolos); } 
 	funcs { /*finish();*/ }
 ;
 
 decls:
-	 tipo { current_type = $1.type; current_dim = $1.dim; current_arr_type = current_type;} lista SEMICOLON decls 
+	 tipo { current_type = $1.type; current_dim = $1.dim; current_dim_arr = current_dim; current_arr_type = current_type;} lista SEMICOLON decls 
 	 | %empty 
 ;
 
@@ -145,18 +146,20 @@ lista:
 		strcpy(s.id, $3);
 		s.type = current_arr_type;
 		s.dir = dir;
-		dir+= current_dim;
+		dir+= current_dim_arr;
 		insert(&tabla_de_simbolos, s);
 		current_arr_type = current_type;
+		current_dim_arr = current_dim;
 	 } 
 	 | ID arreglo {
 	 	sym s;
 		strcpy(s.id, $1);
 		s.type = current_arr_type;
 		s.dir = dir;
-		dir+= current_dim;
+		dir+= current_dim_arr;
 		insert(&tabla_de_simbolos, s);
 		current_arr_type = current_type;
+		current_dim_arr = current_dim;
 	 }
 ;
 
@@ -173,11 +176,17 @@ arreglo:
 			   exit(1);
 		   }
 	       $$.tam = $4.tam + 1;
+		   current_dim_arr *= atoi($2.val);
 		   memcpy($$.dims, $4.dims, 1000);
 		   $$.dims[$$.tam-1] = atoi($2.val);
-
-		   //insert_type_table(&tabla_de_tipos, tr);
+		   typerow renglon;
+		   renglon.type = 5;
+		   renglon.tam = atoi($2.val);
+		   renglon.base.renglon = current_arr_type;
+		   renglon.base.tss = NULL;
+		   insert_type_table(&tabla_de_tipos, renglon);
 		   current_arr_type = tabla_de_tipos.count-1;
+		   printf("%d\n", current_arr_type);
 	   } 
 	   | %empty { $$.tam = 0; }
 ;
@@ -289,7 +298,7 @@ void init(){
     create_type_table(&tabla_de_tipos);
     create_code(&codigo_intermedio);
     create_labels(&lfalses);    
-	print_type_table(&tabla_de_tipos);
+	//print_type_table(&tabla_de_tipos);
 }
 
 void yyerror(char *msg) {

@@ -19,6 +19,7 @@ typedef struct _ttab{
 		int count;
 } typetab;
 
+int insert_type_table(typetab* , typerow);
 void print_type_table(typetab*);
 typerow create_typerow(int, int, int, symtab*);
 void create_type_table(typetab*);

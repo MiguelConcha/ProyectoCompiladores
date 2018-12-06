@@ -88,6 +88,7 @@
 	int current_type;
 	int current_dim;
 	int current_arr_type;
+	int current_dim_arr;
 
 	/* Varaibles para contar las temporales, etiquetas e indices */
 	int label;
@@ -109,7 +110,7 @@
 	/* Funciones auxiliares al análisis semántico y generación de código intermedio */
 	void init();
 
-#line 113 "semantic.tab.c" /* yacc.c:339  */
+#line 114 "semantic.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -203,7 +204,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 48 "semantic.y" /* yacc.c:355  */
+#line 49 "semantic.y" /* yacc.c:355  */
 
     numero num;    
     cadena cad;    
@@ -223,7 +224,7 @@ union YYSTYPE
     } siguientesp;
     int rel;
 
-#line 227 "semantic.tab.c" /* yacc.c:355  */
+#line 228 "semantic.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -240,7 +241,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 244 "semantic.tab.c" /* yacc.c:358  */
+#line 245 "semantic.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -542,14 +543,14 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   123,   123,   124,   123,   129,   129,   130,   134,   135,
-     136,   137,   138,   139,   143,   152,   164,   165,   166,   170,
-     182,   186,   187,   191,   192,   196,   197,   201,   202,   206,
-     207,   211,   212,   213,   214,   215,   216,   217,   218,   219,
-     220,   221,   222,   226,   227,   228,   232,   233,   234,   238,
-     239,   243,   244,   245,   246,   247,   248,   249,   250,   251,
-     252,   256,   257,   261,   262,   266,   267,   268,   269,   270,
-     271,   272,   276,   277,   278,   279,   280,   281
+       0,   124,   124,   125,   124,   130,   130,   131,   135,   136,
+     137,   138,   139,   140,   144,   154,   167,   168,   169,   173,
+     191,   195,   196,   200,   201,   205,   206,   210,   211,   215,
+     216,   220,   221,   222,   223,   224,   225,   226,   227,   228,
+     229,   230,   231,   235,   236,   237,   241,   242,   243,   247,
+     248,   252,   253,   254,   255,   256,   257,   258,   259,   260,
+     261,   265,   266,   270,   271,   275,   276,   277,   278,   279,
+     280,   281,   285,   286,   287,   288,   289,   290
 };
 #endif
 
@@ -1439,136 +1440,144 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 123 "semantic.y" /* yacc.c:1646  */
-    { printf("kk\n"); init(); }
-#line 1445 "semantic.tab.c" /* yacc.c:1646  */
+#line 124 "semantic.y" /* yacc.c:1646  */
+    { init(); }
+#line 1446 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 124 "semantic.y" /* yacc.c:1646  */
+#line 125 "semantic.y" /* yacc.c:1646  */
     { print_type_table(&tabla_de_tipos); print_table(&tabla_de_simbolos); }
-#line 1451 "semantic.tab.c" /* yacc.c:1646  */
+#line 1452 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 125 "semantic.y" /* yacc.c:1646  */
+#line 126 "semantic.y" /* yacc.c:1646  */
     { /*finish();*/ }
-#line 1457 "semantic.tab.c" /* yacc.c:1646  */
+#line 1458 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 129 "semantic.y" /* yacc.c:1646  */
-    { current_type = (yyvsp[0].tipo).type; current_dim = (yyvsp[0].tipo).dim; current_arr_type = current_type;}
-#line 1463 "semantic.tab.c" /* yacc.c:1646  */
+#line 130 "semantic.y" /* yacc.c:1646  */
+    { current_type = (yyvsp[0].tipo).type; current_dim = (yyvsp[0].tipo).dim; current_dim_arr = current_dim; current_arr_type = current_type;}
+#line 1464 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 134 "semantic.y" /* yacc.c:1646  */
+#line 135 "semantic.y" /* yacc.c:1646  */
     { (yyval.tipo).type = 0; (yyval.tipo).dim = 4; }
-#line 1469 "semantic.tab.c" /* yacc.c:1646  */
+#line 1470 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 135 "semantic.y" /* yacc.c:1646  */
+#line 136 "semantic.y" /* yacc.c:1646  */
     { (yyval.tipo).type = 1; (yyval.tipo).dim = 4; }
-#line 1475 "semantic.tab.c" /* yacc.c:1646  */
+#line 1476 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 136 "semantic.y" /* yacc.c:1646  */
+#line 137 "semantic.y" /* yacc.c:1646  */
     { (yyval.tipo).type = 2; (yyval.tipo).dim = 8; }
-#line 1481 "semantic.tab.c" /* yacc.c:1646  */
+#line 1482 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 137 "semantic.y" /* yacc.c:1646  */
+#line 138 "semantic.y" /* yacc.c:1646  */
     { (yyval.tipo).type = 3; (yyval.tipo).dim = 1; }
-#line 1487 "semantic.tab.c" /* yacc.c:1646  */
+#line 1488 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 138 "semantic.y" /* yacc.c:1646  */
+#line 139 "semantic.y" /* yacc.c:1646  */
     { (yyval.tipo).type = 4; (yyval.tipo).dim = 1; }
-#line 1493 "semantic.tab.c" /* yacc.c:1646  */
+#line 1494 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 139 "semantic.y" /* yacc.c:1646  */
+#line 140 "semantic.y" /* yacc.c:1646  */
     { (yyval.tipo).type = 8; (yyval.tipo).dim = 0; }
-#line 1499 "semantic.tab.c" /* yacc.c:1646  */
+#line 1500 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 143 "semantic.y" /* yacc.c:1646  */
+#line 144 "semantic.y" /* yacc.c:1646  */
     {
 	 	sym s;
 		strcpy(s.id, (yyvsp[-1].id));
 		s.type = current_arr_type;
 		s.dir = dir;
-		dir+= current_dim;
+		dir+= current_dim_arr;
 		insert(&tabla_de_simbolos, s);
 		current_arr_type = current_type;
+		current_dim_arr = current_dim;
 	 }
-#line 1513 "semantic.tab.c" /* yacc.c:1646  */
+#line 1515 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 152 "semantic.y" /* yacc.c:1646  */
+#line 154 "semantic.y" /* yacc.c:1646  */
     {
 	 	sym s;
 		strcpy(s.id, (yyvsp[-1].id));
 		s.type = current_arr_type;
 		s.dir = dir;
-		dir+= current_dim;
+		dir+= current_dim_arr;
 		insert(&tabla_de_simbolos, s);
 		current_arr_type = current_type;
+		current_dim_arr = current_dim;
 	 }
-#line 1527 "semantic.tab.c" /* yacc.c:1646  */
+#line 1530 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 164 "semantic.y" /* yacc.c:1646  */
+#line 167 "semantic.y" /* yacc.c:1646  */
     { (yyval.num).type = (yyvsp[0].num).type; strcpy((yyval.num).val, (yyvsp[0].num).val); }
-#line 1533 "semantic.tab.c" /* yacc.c:1646  */
+#line 1536 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 165 "semantic.y" /* yacc.c:1646  */
+#line 168 "semantic.y" /* yacc.c:1646  */
     { (yyval.num).type = (yyvsp[0].num).type; strcpy((yyval.num).val, (yyvsp[0].num).val); }
-#line 1539 "semantic.tab.c" /* yacc.c:1646  */
+#line 1542 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 166 "semantic.y" /* yacc.c:1646  */
+#line 169 "semantic.y" /* yacc.c:1646  */
     { (yyval.num).type = (yyvsp[0].num).type; strcpy((yyval.num).val, (yyvsp[0].num).val); }
-#line 1545 "semantic.tab.c" /* yacc.c:1646  */
+#line 1548 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 170 "semantic.y" /* yacc.c:1646  */
+#line 173 "semantic.y" /* yacc.c:1646  */
     {
 	       if ((yyvsp[-2].num).type != 0) {
 		       yyerror("Te pasaste de verga. Mete tu entero!");
 			   exit(1);
 		   }
 	       (yyval.arr).tam = (yyvsp[0].arr).tam + 1;
+		   current_dim_arr *= atoi((yyvsp[-2].num).val);
 		   memcpy((yyval.arr).dims, (yyvsp[0].arr).dims, 1000);
 		   (yyval.arr).dims[(yyval.arr).tam-1] = atoi((yyvsp[-2].num).val);
-
-		   //insert_type_table(&tabla_de_tipos, tr);
+		   typerow renglon;
+		   renglon.type = 5;
+		   renglon.tam = atoi((yyvsp[-2].num).val);
+		   renglon.base.renglon = current_arr_type;
+		   renglon.base.tss = NULL;
+		   insert_type_table(&tabla_de_tipos, renglon);
 		   current_arr_type = tabla_de_tipos.count-1;
+		   printf("%d\n", current_arr_type);
 	   }
-#line 1562 "semantic.tab.c" /* yacc.c:1646  */
+#line 1571 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 182 "semantic.y" /* yacc.c:1646  */
+#line 191 "semantic.y" /* yacc.c:1646  */
     { (yyval.arr).tam = 0; }
-#line 1568 "semantic.tab.c" /* yacc.c:1646  */
+#line 1577 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1572 "semantic.tab.c" /* yacc.c:1646  */
+#line 1581 "semantic.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1796,7 +1805,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 284 "semantic.y" /* yacc.c:1906  */
+#line 293 "semantic.y" /* yacc.c:1906  */
 
 
 void init(){    
@@ -1805,7 +1814,7 @@ void init(){
     create_type_table(&tabla_de_tipos);
     create_code(&codigo_intermedio);
     create_labels(&lfalses);    
-	print_type_table(&tabla_de_tipos);
+	//print_type_table(&tabla_de_tipos);
 }
 
 void yyerror(char *msg) {

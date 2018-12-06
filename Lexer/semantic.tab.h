@@ -104,7 +104,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 48 "semantic.y" /* yacc.c:1909  */
+#line 49 "semantic.y" /* yacc.c:1909  */
 
     numero num;    
     cadena cad;    

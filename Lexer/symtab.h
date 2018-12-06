@@ -1,7 +1,6 @@
 #ifndef SYMTAB_H
 #define SYMTAB_H
 
-
 struct _symbol{
 	char id[32];
 	int type;
