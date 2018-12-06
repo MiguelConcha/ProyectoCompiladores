@@ -1,6 +1,5 @@
 #ifndef ATTRIBUTES_H
 #define ATTRIBUTES_H
-
     
 typedef struct _type{
 	int type;
@@ -23,17 +22,17 @@ typedef struct _caracter{
 } caracter;
 
 typedef struct _cadena{
-	char val[1000];
+	char val[100];
 } cadena;
 
 typedef struct _arreglo{
 	int tam;
-	int dims[1000];
+	int dims[100];
 } arreglo;
 
 
 typedef struct _labels{
-	char label[1000][32];
+	char label[100][32];
 	int count;
 } labels;
 

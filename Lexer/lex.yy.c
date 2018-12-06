@@ -930,7 +930,7 @@ case YY_STATE_EOF(comentario):
 case 4:
 YY_RULE_SETUP
 #line 34 "lexer.l"
-{ increment(yytext); return INTTYPE; }
+{ printf("Leyendo int del lexer.\n"); increment(yytext); return INTTYPE; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
@@ -1151,41 +1151,41 @@ case 48:
 /* rule 48 can match eol */
 YY_RULE_SETUP
 #line 83 "lexer.l"
-{ increment(yytext); yylval.car.type = 3; yylval.car.val = yytext[0]; return CARACTER; }
+{ increment(yytext); /*yylval.car.type = 3; yylval.car.val = yytext[0];*/ return CARACTER; }
 	YY_BREAK
 case 49:
 /* rule 49 can match eol */
 YY_RULE_SETUP
 #line 84 "lexer.l"
-{ increment(yytext); strcpy(yylval.cad.val, yytext); return CADENA; }
+{ increment(yytext); /*strcpy(yylval.cad.val, yytext);*/ return CADENA; }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
 #line 85 "lexer.l"
-{ increment(yytext); strcpy(yylval.id, yytext); return ID; }
+{ increment(yytext); /*strcpy(yylval.id, yytext);*/ return ID; }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
 #line 86 "lexer.l"
 { increment(yytext); 
-						  yylval.num.type = 0; 
-						  strcpy(yylval.num.val, yytext); 
+						 /* yylval.num.type = 0; 
+						  strcpy(yylval.num.val, yytext);*/ 
 						  return INT; }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
 #line 90 "lexer.l"
 { increment(yytext); 
-					      yylval.num.type = 2;
-						  strcpy(yylval.num.val, yytext); 
+					      /*yylval.num.type = 2;
+						  strcpy(yylval.num.val, yytext);*/ 
 						  return DOUBLE; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
 #line 94 "lexer.l"
 { increment(yytext); 
-						  yylval.num.type = 1;
-						  strcpy(yylval.num.val, yytext); 
+						 /* yylval.num.type = 1;
+						  strcpy(yylval.num.val, yytext);*/ 
 						  return FLOAT; }
 	YY_BREAK
 case 54:

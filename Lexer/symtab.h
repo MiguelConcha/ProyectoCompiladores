@@ -13,17 +13,15 @@ struct _symbol{
 typedef struct _symbol sym;
 
 typedef struct _symtab{
-	sym symbols[1000];
+	sym symbols[100];
 	int count;
 } symtab;
 
 int search(symtab *, char*);
-int insert(symtab*, sym );
+int insert(symtab*, sym);
 void print_table(symtab*);
 int get_dir(symtab*, char*);
 int get_type(symtab*, char *);
 void create_table(symtab *st);
     
-
-
 #endif

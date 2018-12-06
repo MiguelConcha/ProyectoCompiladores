@@ -68,9 +68,10 @@
     #include <stdlib.h>
 	void yyerror(char *);
     extern int yylex();
+	extern FILE * yyin;
     extern int yylineno;
 
-#line 74 "parser.tab.c" /* yacc.c:339  */
+#line 75 "parser.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -175,7 +176,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 179 "parser.tab.c" /* yacc.c:358  */
+#line 180 "parser.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -477,14 +478,14 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    63,    63,    67,    68,    72,    73,    74,    75,    76,
-      77,    81,    82,    86,    87,    88,    92,    93,    97,    98,
-     102,   103,   107,   108,   112,   113,   117,   118,   122,   123,
-     124,   125,   126,   127,   128,   129,   130,   131,   132,   133,
-     137,   138,   139,   143,   144,   145,   149,   150,   154,   155,
-     156,   157,   158,   159,   160,   161,   162,   163,   167,   168,
-     172,   173,   177,   178,   179,   180,   181,   182,   183,   187,
-     188,   189,   190,   191,   192
+       0,    64,    64,    68,    69,    73,    74,    75,    76,    77,
+      78,    82,    83,    87,    88,    89,    93,    94,    98,    99,
+     103,   104,   108,   109,   113,   114,   118,   119,   123,   124,
+     125,   126,   127,   128,   129,   130,   131,   132,   133,   134,
+     138,   139,   140,   144,   145,   146,   150,   151,   155,   156,
+     157,   158,   159,   160,   161,   162,   163,   164,   168,   169,
+     173,   174,   178,   179,   180,   181,   182,   183,   184,   188,
+     189,   190,   191,   192,   193
 };
 #endif
 
@@ -1373,7 +1374,7 @@ yyreduce:
   switch (yyn)
     {
       
-#line 1377 "parser.tab.c" /* yacc.c:1646  */
+#line 1378 "parser.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1601,13 +1602,9 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 195 "parser.y" /* yacc.c:1906  */
+#line 196 "parser.y" /* yacc.c:1906  */
 
 
 void yyerror (char *s) {
    fprintf (stderr, "%s\n", s);
-}
-
-int main() {
-	return 0;
 }

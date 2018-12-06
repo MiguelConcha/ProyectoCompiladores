@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 int search(symtab *st, char*id){
     int i;
     for(i=0; i <st->count; i++){
@@ -28,7 +27,6 @@ void print_table(symtab* st){
         printf("%d\t%s\t%d\t%d\n", i, st->symbols[i].id, st->symbols[i].type, st->symbols[i].dir);        
     }
 }
-
 
 int get_dir(symtab *st, char* id){
     int i;

@@ -14,9 +14,7 @@
 	extern int yylineno;
 	extern FILE *yyin;
 	void yyerror(char *);
-
 	void yyerror2(char*, char*);
-	void yyerror(char *);
 
 	/* Variable para el conteo de direcciones */
 	int dir=0;
@@ -45,28 +43,6 @@
 
 	/* Funciones auxiliares al análisis semántico y generación de código intermedio */
 	void init();
-	void finish();
-
-	exp suma(exp e1, exp e2);
-	exp resta(exp e1, exp e2);
-	exp multiplicacion(exp e1, exp e2);
-	exp division(exp e1, exp e2);
-	exp get_numero(numero);
-	exp identificador(char *);
-	exp asignacion(char *id, exp e);
-
-	/* Funciones auxiliares para la comprobación de tipos */
-	int max(int t1, int t2);
-	char *ampliar(char *dir, int t1, int t2);
-	char *reducir(char *dir, int t1, int t2);
-
-
-	/* Funciones para generar temporales, etiquetas e indices */
-	char *newTemp();
-	char *newLabel();
-	char *newIndex();
-
-
 %}
 
 %union {
@@ -80,12 +56,12 @@
     struct{
 		labels falses;
 		labels trues;
-    }booleanos;
+    } booleanos;
     labels siguientes;
     struct{
         labels siguientes;
         int ifelse;
-    }siguientesp;
+    } siguientesp;
     int rel;
 }
 
@@ -135,16 +111,18 @@
 %nonassoc "then"
 %nonassoc ELSE
 
-%start prog
-
 %type<tipo> tipo
 %type<num> numero
 %type<arr> arreglo
 
+%start prog
+
 %%
 
 prog:
-	{ printf("kk\n"); init();} decls { print_type_table(&tabla_de_tipos); print_table(&tabla_de_simbolos); } funcs { /*finish();*/ }
+	{ printf("kk\n"); init(); } decls 
+	{ print_type_table(&tabla_de_tipos); print_table(&tabla_de_simbolos); } 
+	funcs { /*finish();*/ }
 ;
 
 decls:
@@ -198,8 +176,7 @@ arreglo:
 		   memcpy($$.dims, $4.dims, 1000);
 		   $$.dims[$$.tam-1] = atoi($2.val);
 
-		   typerow* tr = create_typerow(5, $$.tam, current_arr_type, NULL);
-		   insert_type_table(&tabla_de_tipos, tr);
+		   //insert_type_table(&tabla_de_tipos, tr);
 		   current_arr_type = tabla_de_tipos.count-1;
 	   } 
 	   | %empty { $$.tam = 0; }
@@ -307,6 +284,7 @@ rel:
 %%
 
 void init(){    
+	printf("Esto es dentro de init.\n");
     create_table(&tabla_de_simbolos);
     create_type_table(&tabla_de_tipos);
     create_code(&codigo_intermedio);
@@ -314,19 +292,17 @@ void init(){
 	print_type_table(&tabla_de_tipos);
 }
 
-void finish(){    
-    print_code(&codigo_intermedio);    
-}
-
 void yyerror(char *msg) {
 	printf("%s\n", msg);
 }
 
 int main(int argc, char **argv) {
-	FILE *r = fopen(argv[1], "r");
-	yyin = r;
+	yyin = fopen(argv[1], "r");
+	printf("Voy a empezar el analisis\n");
+	//int a = yylex();
+	//	printf("<<<<<%d\n", a);
 	int result = yyparse();
-	printf("%d\n", result);
-	fclose(r);
+	printf("resultado del analisis: %d\n", result);
+	fclose(yyin);
 	return 0;
 }

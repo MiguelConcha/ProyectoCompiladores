@@ -3,6 +3,7 @@
     #include <stdlib.h>
 	void yyerror(char *);
     extern int yylex();
+	extern FILE * yyin;
     extern int yylineno;
 %}
 
@@ -196,8 +197,4 @@ rel:
 
 void yyerror (char *s) {
    fprintf (stderr, "%s\n", s);
-}
-
-int main() {
-	return 0;
 }

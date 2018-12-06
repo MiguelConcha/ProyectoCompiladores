@@ -13,7 +13,7 @@ char *pop_label(labels* ls){
 }
 
 void push_label(labels* ls, char *l){
-    if(ls->count<1000){
+    if(ls->count<100){
         strcpy(ls->label[ls->count], l);
         ls->count++;
     }
@@ -31,7 +31,6 @@ void create_labels(labels* ls){
     ls->count=0;
 }
 
-
 void print_stack_labels(labels* ls){
     int i;
     printf("LABELS\n");
@@ -39,7 +38,6 @@ void print_stack_labels(labels* ls){
         printf("%s\n", ls->label[i]);
     }
 }
-
 
 void print_list_labels(labels* ls){
     int i;

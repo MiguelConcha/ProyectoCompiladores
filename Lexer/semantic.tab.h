@@ -104,7 +104,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 72 "semantic.y" /* yacc.c:1909  */
+#line 48 "semantic.y" /* yacc.c:1909  */
 
     numero num;    
     cadena cad;    
@@ -116,12 +116,12 @@ union YYSTYPE
     struct{
 		labels falses;
 		labels trues;
-    }booleanos;
+    } booleanos;
     labels siguientes;
     struct{
         labels siguientes;
         int ifelse;
-    }siguientesp;
+    } siguientesp;
     int rel;
 
 #line 128 "semantic.tab.h" /* yacc.c:1909  */

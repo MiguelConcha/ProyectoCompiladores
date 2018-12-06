@@ -15,13 +15,12 @@ struct _typerow{
 typedef struct _typerow typerow;
 
 typedef struct _ttab{
-		typerow *trs[1000];
+		typerow trs[100];
 		int count;
 } typetab;
 
-int insert_type_table(typetab*, typerow*);
 void print_type_table(typetab*);
-typerow* create_typerow(int, int, int, symtab*);
+typerow create_typerow(int, int, int, symtab*);
 void create_type_table(typetab*);
     
 #endif
