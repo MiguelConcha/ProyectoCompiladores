@@ -1,5 +1,5 @@
 /*dlekdkjekdjkej*/
-int identifador[3];
+int `identifador[3];
 
 func int pedro() {
 	return;

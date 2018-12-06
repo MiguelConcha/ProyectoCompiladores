@@ -1,0 +1,1 @@
+int identifador[0];
