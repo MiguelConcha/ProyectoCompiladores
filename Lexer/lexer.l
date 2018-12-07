@@ -31,7 +31,7 @@ caracter '[\x00-\x26\x28-\x7F]'
 <comentario>"*/"		{ BEGIN(INITIAL); } 
 <comentario><<EOF>>		{ printf("%s\n", "Error léxico: faltó cerrar el comentario."); exit(1); }
 
-int						{ printf("Leyendo int del lexer.\n"); increment(yytext); return INTTYPE; }
+int						{ increment(yytext); return INTTYPE; }
 float					{ increment(yytext); return FLOATTYPE; }
 double					{ increment(yytext); return DOUBLETYPE; }
 char					{ increment(yytext); return CHARTYPE; }

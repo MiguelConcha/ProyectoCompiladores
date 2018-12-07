@@ -5,10 +5,10 @@
 	#include <string.h>
 
 	#include "attributes.h"
-	#include "symtab.h"
-	#include "typetab.h"
+	#include "mastertab.h"
 	#include "backpatch.h"
 	#include "intermediate_code.h"
+	#include "pila.h"
 
 	extern int yylex();
 	extern int yylineno;
@@ -33,10 +33,11 @@
 	/* Variable para el unico atributo heredado de sentencia prima*/
 	labels lfalses;
 
+	/*pila para las tablas*/
+	struct nodo *stack_masterchefs; 
 
 	/* Variable para la tabla de símbolos*/
-	symtab tabla_de_simbolos;
-	typetab tabla_de_tipos;
+	struct mastertab *masterchef;
 
 	/* Variable papra guardar el código intermedio que se va generando */
 	ic codigo_intermedio;
@@ -122,7 +123,7 @@
 
 prog:
 	{ init(); } decls 
-	{ print_type_table(&tabla_de_tipos); print_table(&tabla_de_simbolos); } 
+	{ print_type_table(masterchef->tt); print_table(masterchef->st); } 
 	funcs { /*finish();*/ }
 ;
 
@@ -147,7 +148,7 @@ lista:
 		s.type = current_arr_type;
 		s.dir = dir;
 		dir+= current_dim_arr;
-		insert(&tabla_de_simbolos, s);
+		insert(stack_masterchefs->tabla->st, s);
 		current_arr_type = current_type;
 		current_dim_arr = current_dim;
 	 } 
@@ -157,7 +158,8 @@ lista:
 		s.type = current_arr_type;
 		s.dir = dir;
 		dir+= current_dim_arr;
-		insert(&tabla_de_simbolos, s);
+		//insert(&tabla_de_simbolos, s);
+		insert(stack_masterchefs->tabla->st, s);
 		current_arr_type = current_type;
 		current_dim_arr = current_dim;
 	 }
@@ -183,9 +185,10 @@ arreglo:
 		   renglon.type = 5;
 		   renglon.tam = atoi($2.val);
 		   renglon.base.renglon = current_arr_type;
-		   renglon.base.tss = NULL;
-		   insert_type_table(&tabla_de_tipos, renglon);
-		   current_arr_type = tabla_de_tipos.count-1;
+		   renglon.base.smt = NULL;
+		   //insert_type_table(&tabla_de_tipos, renglon);
+		   insert_type_table(stack_masterchefs->tabla->tt, renglon);
+		   current_arr_type = stack_masterchefs->tabla->tt->count-1;
 		   printf("%d\n", current_arr_type);
 	   } 
 	   | %empty { $$.tam = 0; }
@@ -293,12 +296,17 @@ rel:
 %%
 
 void init(){    
-	printf("Esto es dentro de init.\n");
-    create_table(&tabla_de_simbolos);
-    create_type_table(&tabla_de_tipos);
-    create_code(&codigo_intermedio);
-    create_labels(&lfalses);    
-	//print_type_table(&tabla_de_tipos);
+	masterchef = (struct mastertab *) malloc(sizeof(struct mastertab));
+	masterchef->tt = (typetab *) malloc(sizeof(typetab));
+	masterchef->st = (symtab *) malloc(sizeof(symtab));
+	stack_masterchefs = NULL;
+    create_table(masterchef->st);
+    create_type_table(masterchef->tt);
+
+	stack_masterchefs = mete(stack_masterchefs, masterchef);
+
+    //create_code(&codigo_intermedio);
+    //create_labels(&lfalses);    
 }
 
 void yyerror(char *msg) {
@@ -307,7 +315,6 @@ void yyerror(char *msg) {
 
 int main(int argc, char **argv) {
 	yyin = fopen(argv[1], "r");
-	printf("Voy a empezar el analisis\n");
 	//int a = yylex();
 	//	printf("<<<<<%d\n", a);
 	int result = yyparse();
