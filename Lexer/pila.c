@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "pila.h"
+#include "mastertab.h"
 
 /*
  * Mete un elemento en el stack.

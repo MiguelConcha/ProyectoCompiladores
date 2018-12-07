@@ -4,3 +4,9 @@ char c[10];
 float d;
 double e;
 char f;
+struct {
+	int x;
+	int y;
+	float z;
+} v;
+int as;

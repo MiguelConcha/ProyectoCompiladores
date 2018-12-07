@@ -106,6 +106,9 @@ union YYSTYPE
 {
 #line 50 "semantic.y" /* yacc.c:1909  */
 
+	struct {
+		int cantidad;
+	} cant;
     numero num;    
     cadena cad;    
     caracter car;    
@@ -124,7 +127,7 @@ union YYSTYPE
     } siguientesp;
     int rel;
 
-#line 128 "semantic.tab.h" /* yacc.c:1909  */
+#line 131 "semantic.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

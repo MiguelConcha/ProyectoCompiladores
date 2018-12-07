@@ -48,6 +48,9 @@
 %}
 
 %union {
+	struct {
+		int cantidad;
+	} cant;
     numero num;    
     cadena cad;    
     caracter car;    
@@ -116,6 +119,8 @@
 %type<tipo> tipo
 %type<num> numero
 %type<arr> arreglo
+%type<cant> decls
+%type<cant> lista
 
 %start prog
 
@@ -128,8 +133,14 @@ prog:
 ;
 
 decls:
-	 tipo { current_type = $1.type; current_dim = $1.dim; current_dim_arr = current_dim; current_arr_type = current_type;} lista SEMICOLON decls 
-	 | %empty 
+	 tipo { 
+	 	current_type = $1.type;
+		current_dim = $1.dim;
+		current_dim_arr = current_dim; 
+		current_arr_type = current_type;
+     } 
+	 lista SEMICOLON decls {$$.cantidad = $3.cantidad; $$.cantidad += $5.cantidad ; printf("tam decls %d\n", $$.cantidad); } /*no estamos seguros*/
+	 | %empty { $$.cantidad = 0; }
 ;
 
 tipo: 
@@ -138,7 +149,26 @@ tipo:
 	| DOUBLETYPE { $$.type = 2; $$.dim = 8; }
 	| CHARTYPE { $$.type = 3; $$.dim = 1; }
 	| VOID { $$.type = 4; $$.dim = 1; }
-	| STRUCT LCURLYB decls RCURLYB { $$.type = 8; $$.dim = 0; }  /* Tipo = 5, dim = decls.dim */
+	| STRUCT LCURLYB {
+		struct mastertab* ntab = (struct mastertab *) malloc(sizeof(struct mastertab));
+		ntab->tt = (typetab *) malloc(sizeof(typetab));
+		ntab->st = (symtab *) malloc(sizeof(symtab));
+		create_table(ntab->st);
+		create_type_table(ntab->tt);
+		stack_masterchefs = mete(stack_masterchefs, ntab);
+	  } 
+	  decls RCURLYB { 
+	  	struct mastertab* sacada = (struct mastertab *) malloc(sizeof(struct mastertab));
+		stack_masterchefs = saca(stack_masterchefs, sacada); 
+		typerow renglon;
+		renglon.type = 6;
+		renglon.tam = $4.cantidad;
+		renglon.base.renglon = -2;
+		renglon.base.smt = sacada;
+		insert_type_table(stack_masterchefs->tabla->tt, renglon);
+
+	  	$$.type = stack_masterchefs->tabla->tt->count-1; $$.dim = $4.cantidad; 
+	  }  /* Tipo = 5, dim = decls.dim */
 ;
 
 lista:
@@ -149,6 +179,7 @@ lista:
 		s.dir = dir;
 		dir+= current_dim_arr;
 		insert(stack_masterchefs->tabla->st, s);
+		$$.cantidad  = current_dim_arr;
 		current_arr_type = current_type;
 		current_dim_arr = current_dim;
 	 } 
@@ -160,6 +191,7 @@ lista:
 		dir+= current_dim_arr;
 		//insert(&tabla_de_simbolos, s);
 		insert(stack_masterchefs->tabla->st, s);
+		$$.cantidad  = current_dim_arr;
 		current_arr_type = current_type;
 		current_dim_arr = current_dim;
 	 }
@@ -189,7 +221,6 @@ arreglo:
 		   //insert_type_table(&tabla_de_tipos, renglon);
 		   insert_type_table(stack_masterchefs->tabla->tt, renglon);
 		   current_arr_type = stack_masterchefs->tabla->tt->count-1;
-		   printf("%d\n", current_arr_type);
 	   } 
 	   | %empty { $$.tam = 0; }
 ;
@@ -299,6 +330,7 @@ void init(){
 	masterchef = (struct mastertab *) malloc(sizeof(struct mastertab));
 	masterchef->tt = (typetab *) malloc(sizeof(typetab));
 	masterchef->st = (symtab *) malloc(sizeof(symtab));
+	stack_masterchefs = (struct nodo*) malloc(sizeof(struct nodo));
 	stack_masterchefs = NULL;
     create_table(masterchef->st);
     create_type_table(masterchef->tt);

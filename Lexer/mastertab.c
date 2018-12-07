@@ -72,6 +72,8 @@ char* map_type(int t) {
         return "VOID";
     if (t== 5)
         return "ARR";
+	if (t == 6)
+		return "STRUCT";
     char *str = (char*)malloc(100);
     sprintf(str, "%d", t);
     return str;

@@ -930,7 +930,7 @@ case YY_STATE_EOF(comentario):
 case 4:
 YY_RULE_SETUP
 #line 34 "lexer.l"
-{ printf("Leyendo int del lexer.\n"); increment(yytext); return INTTYPE; }
+{ increment(yytext); return INTTYPE; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
