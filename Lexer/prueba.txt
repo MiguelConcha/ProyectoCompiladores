@@ -6,6 +6,10 @@ double e;
 char f;
 struct {
 	int x;
+	struct {
+		double ar[3][2];
+		char p;
+	} eder;
 	int y;
 	float z;
 } v;

@@ -3,7 +3,7 @@
     
 typedef struct _type{
 	int type;
-	int dim;
+	int bytes;
 } type;
 
 typedef struct _exp{

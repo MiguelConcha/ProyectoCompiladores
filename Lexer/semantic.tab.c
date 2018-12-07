@@ -1465,7 +1465,7 @@ yyreduce:
 #line 136 "semantic.y" /* yacc.c:1646  */
     { 
 	 	current_type = (yyvsp[0].tipo).type;
-		current_dim = (yyvsp[0].tipo).dim;
+		current_dim = (yyvsp[0].tipo).bytes;
 		current_dim_arr = current_dim; 
 		current_arr_type = current_type;
      }
@@ -1486,31 +1486,31 @@ yyreduce:
 
   case 8:
 #line 147 "semantic.y" /* yacc.c:1646  */
-    { (yyval.tipo).type = 0; (yyval.tipo).dim = 4; }
+    { (yyval.tipo).type = 0; (yyval.tipo).bytes = 4; }
 #line 1491 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
 #line 148 "semantic.y" /* yacc.c:1646  */
-    { (yyval.tipo).type = 1; (yyval.tipo).dim = 4; }
+    { (yyval.tipo).type = 1; (yyval.tipo).bytes = 4; }
 #line 1497 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
 #line 149 "semantic.y" /* yacc.c:1646  */
-    { (yyval.tipo).type = 2; (yyval.tipo).dim = 8; }
+    { (yyval.tipo).type = 2; (yyval.tipo).bytes = 8; }
 #line 1503 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
 #line 150 "semantic.y" /* yacc.c:1646  */
-    { (yyval.tipo).type = 3; (yyval.tipo).dim = 1; }
+    { (yyval.tipo).type = 3; (yyval.tipo).bytes = 1; }
 #line 1509 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
 #line 151 "semantic.y" /* yacc.c:1646  */
-    { (yyval.tipo).type = 4; (yyval.tipo).dim = 1; }
+    { (yyval.tipo).type = 4; (yyval.tipo).bytes = 1; }
 #line 1515 "semantic.tab.c" /* yacc.c:1646  */
     break;
 
@@ -1539,7 +1539,7 @@ yyreduce:
 		renglon.base.smt = sacada;
 		insert_type_table(stack_masterchefs->tabla->tt, renglon);
 
-	  	(yyval.tipo).type = stack_masterchefs->tabla->tt->count-1; (yyval.tipo).dim = (yyvsp[-1].cant).cantidad; 
+	  	(yyval.tipo).type = stack_masterchefs->tabla->tt->count-1; (yyval.tipo).bytes = (yyvsp[-1].cant).cantidad; 
 	  }
 #line 1545 "semantic.tab.c" /* yacc.c:1646  */
     break;

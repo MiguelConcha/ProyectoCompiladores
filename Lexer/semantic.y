@@ -135,7 +135,7 @@ prog:
 decls:
 	 tipo { 
 	 	current_type = $1.type;
-		current_dim = $1.dim;
+		current_dim = $1.bytes;
 		current_dim_arr = current_dim; 
 		current_arr_type = current_type;
      } 
@@ -144,11 +144,11 @@ decls:
 ;
 
 tipo: 
-	INTTYPE { $$.type = 0; $$.dim = 4; }
-    | FLOATTYPE { $$.type = 1; $$.dim = 4; }
-	| DOUBLETYPE { $$.type = 2; $$.dim = 8; }
-	| CHARTYPE { $$.type = 3; $$.dim = 1; }
-	| VOID { $$.type = 4; $$.dim = 1; }
+	INTTYPE { $$.type = 0; $$.bytes = 4; }
+    | FLOATTYPE { $$.type = 1; $$.bytes = 4; }
+	| DOUBLETYPE { $$.type = 2; $$.bytes = 8; }
+	| CHARTYPE { $$.type = 3; $$.bytes = 1; }
+	| VOID { $$.type = 4; $$.bytes = 1; }
 	| STRUCT LCURLYB {
 		struct mastertab* ntab = (struct mastertab *) malloc(sizeof(struct mastertab));
 		ntab->tt = (typetab *) malloc(sizeof(typetab));
@@ -167,8 +167,8 @@ tipo:
 		renglon.base.smt = sacada;
 		insert_type_table(stack_masterchefs->tabla->tt, renglon);
 
-	  	$$.type = stack_masterchefs->tabla->tt->count-1; $$.dim = $4.cantidad; 
-	  }  /* Tipo = 5, dim = decls.dim */
+	  	$$.type = stack_masterchefs->tabla->tt->count-1; $$.bytes = $4.cantidad; 
+	  }  /* Tipo = 5, bytes = decls.bytes */
 ;
 
 lista:
