@@ -13,7 +13,8 @@ struct nodo {
 };
 
 struct nodo* mete(struct nodo*, struct mastertab*);
-struct nodo* saca(struct nodo*, struct mastertab*);
+struct nodo* saca(struct nodo*);
+struct mastertab* tope(struct nodo*);
 void imprime_pila(struct nodo*);
 int vacia(struct nodo*);
 

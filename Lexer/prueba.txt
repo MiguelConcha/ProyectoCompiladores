@@ -1,5 +1,5 @@
-int a[3][4][5];
-int b[1][2][3];
+int a[3][2][1];
+int b[1][3][4];
 char c[10];
 float d;
 double e;
@@ -13,5 +13,5 @@ struct {
 	int y;
 	float z;
 } v;
-int as;
-f + d
+int g;
+v.xkasdjf = 3;

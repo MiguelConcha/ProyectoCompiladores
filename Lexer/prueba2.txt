@@ -1,0 +1,10 @@
+struct {
+	int x;
+	struct {
+		float y;
+		struct {
+			double z;
+		} w;
+	} kk;
+} v;
+v.x = 5;

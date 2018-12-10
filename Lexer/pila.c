@@ -22,14 +22,14 @@ struct nodo* mete(struct nodo* pila, struct mastertab *tabla) {
  * Autores: Miguel Concha, Andrés Flores, Pedro Sánchez.
  * Fecha de programación: 12-11-18
 */
-struct nodo* saca(struct nodo *pila, struct mastertab *tabla) {
-    struct nodo* tmp = pila;
-    tabla = pila->tabla;
-    pila = pila->siguiente;
-    free(tmp);
-    return pila;
+struct nodo* saca(struct nodo *pila) {
+    //struct nodo* tmp = pila;
+	return pila->siguiente;
 }
 
+struct mastertab* tope(struct nodo *pila) {
+    return pila->tabla;
+}
 /*
  * Imprime el contenido de la pila en consola y el archivo que recibe como parámetro.
  * Autores: Miguel Concha, Andrés Flores, Pedro Sánchez.

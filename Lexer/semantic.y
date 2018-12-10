@@ -16,6 +16,7 @@
 	void yyerror(char *);
 	void yyerror2(char*, char*);
 
+	void finish();
 	/* Variable para el conteo de direcciones */
 	int dir=0;
 
@@ -53,7 +54,7 @@
 	exp modulo(exp e1, exp e2);
 	exp get_numero(numero);
 	exp identificador(char *);
-	exp asignacion(char *id, exp e);
+	exp asignacion(char *, char *, exp, int);
 
     exp envolver_varr(varr);
     exp envolver_cadena(cadena);
@@ -80,6 +81,7 @@
     caracter car;    
     arreglo arr;    
     char id[32];
+	pii pi;	
     exp expresion;
     type tipo;
     struct{
@@ -149,6 +151,8 @@
 %type<vararr> var_arr
 %type<rel> rel
 %type<booleanos> cond
+%type<siguientes> sent sents
+%type<pi> parte_izq
 
 %start prog
 
@@ -156,8 +160,9 @@
 
 prog:
 	{ init(); } decls 
-	{ print_type_table(masterchef->tt); print_table(masterchef->st); } 
-	funcs { /*finish();*/ }
+	{ print_type_table(masterchef->tt); print_table(masterchef->st); }
+
+	sent /*funcs*/ { finish(); }
 ;
 
 decls:
@@ -180,14 +185,16 @@ tipo:
 	| STRUCT LCURLYB {
 		struct mastertab* ntab = (struct mastertab *) malloc(sizeof(struct mastertab));
 		ntab->tt = (typetab *) malloc(sizeof(typetab));
-		ntab->st = (symtab *) malloc(sizeof(symtab));
+		ntab->st= (symtab *) malloc(sizeof(symtab));
 		create_table(ntab->st);
 		create_type_table(ntab->tt);
 		stack_masterchefs = mete(stack_masterchefs, ntab);
 	  } 
 	  decls RCURLYB { 
-	  	struct mastertab* sacada = (struct mastertab *) malloc(sizeof(struct mastertab));
-		stack_masterchefs = saca(stack_masterchefs, sacada); 
+		struct mastertab* sacada;// = (struct mastertab *) malloc(sizeof(struct mastertab));
+		sacada = tope(stack_masterchefs); 
+		stack_masterchefs = saca(stack_masterchefs);
+
 		typerow renglon;
 		renglon.type = 6;
 		renglon.tam = $4.cantidad;
@@ -226,9 +233,15 @@ lista:
 ;
 
 numero:
-	INT { $$.type = $1.type; strcpy($$.val, $1.val); }
-	| DOUBLE { $$.type = $1.type; strcpy($$.val, $1.val); }
-	| FLOAT { $$.type = $1.type; strcpy($$.val, $1.val); }
+	signo INT { $$.type = $2.type; strcpy($$.val, $2.val); }
+	| signo DOUBLE { $$.type = $2.type; strcpy($$.val, $2.val); }
+	| signo FLOAT { $$.type = $2.type; strcpy($$.val, $2.val); }
+;
+
+signo: 
+	 PLUS
+	 | MINUS
+	 | %empty
 ;
 
 arreglo:
@@ -246,7 +259,6 @@ arreglo:
 		   renglon.tam = atoi($2.val);
 		   renglon.base.renglon = current_arr_type;
 		   renglon.base.smt = NULL;
-		   //insert_type_table(&tabla_de_tipos, renglon);
 		   insert_type_table(stack_masterchefs->tabla->tt, renglon);
 		   current_arr_type = stack_masterchefs->tabla->tt->count-1;
 	   } 
@@ -284,8 +296,14 @@ sent:
     | WHILE LPAR cond RPAR sent 
     | DO sent WHILE LPAR cond RPAR SEMICOLON 
     | FOR LPAR sent SEMICOLON cond SEMICOLON sent RPAR sent  
-	| parte_izq ASSIG exp SEMICOLON 
-	| RETURN exp SEMICOLON 
+	| parte_izq ASSIG exp SEMICOLON {
+                char i[32];
+                strcpy(i, newIndex());
+                $$ = create_list(i);
+                asignacion($1.id1, $1.id2, $3, $1.type); 
+                printf("S->parte_izq = E;\n");
+			} 
+	| RETURN exp SEMICOLON
 	| RETURN SEMICOLON 
 	| LCURLYB sent RCURLYB  
 	| SWITCH LPAR exp RPAR LCURLYB casos RCURLYB 
@@ -300,15 +318,19 @@ casos:
 ;
 
 parte_izq:
-		 ID 
-	     | var_arr  
-		 | ID DOT ID 
+		 ID { strcpy($$.id1, $1); strcpy($$.id2,""); $$.type = -1;}
+	     | var_arr  { strcpy($$.id1, $1.representacion); $$.type = $1.type;}
+		 | ID DOT ID { strcpy($$.id1, $1); strcpy($$.id2, $3); $$.type = -1;}
 ;
 
 var_arr:
 	   ID LBRACKET exp RBRACKET { if($3.type != 0) { 
                                     yyerror("Debes indexar el arreglo con un entero.\n"); 
                                   }
+								  strcpy($$.representacion, $1);
+								  strcat($$.representacion, "[");
+								  strcat($$.representacion, $3.dir);
+								  strcat($$.representacion, "]");
                                   struct nodo* it = stack_masterchefs;
                                   int encontrado = 0;
                                   while(it != NULL) {
@@ -331,6 +353,9 @@ var_arr:
                                   } 
                                   $$.tt = it->tabla->tt; }//valor   
        | var_arr LBRACKET exp RBRACKET { 
+								  strcat($$.representacion, "[");
+								  strcat($$.representacion, $3.dir);
+								  strcat($$.representacion, "]");
                                   if($3.type != 0) { 
                                     yyerror("Debes indexar el arreglo con un entero.\n"); 
                                   }
@@ -582,10 +607,14 @@ exp division(exp e1, exp e2){
 }
 
 exp modulo(exp e1, exp e2){
+	if(e1.type != 0 || e2.type != 0) {
+		yyerror("La operación módulo requiere operandos enteros.\n");
+		exit(1);
+	}
     exp e;
     cuadrupla c;
     e.type = max(e1.type, e2.type);
-    if( e.type==-1) yyerror("Error de tipos");
+	if( e.type==-1) yyerror("Error de tipos");
     else{
         char t[32];
         strcpy(t,newTemp());
@@ -599,23 +628,72 @@ exp modulo(exp e1, exp e2){
     return e;    
 }
 
-exp asignacion(char *id, exp e){
-    exp e1;
-    int tipo = get_type(masterchef->st, id);
-    if( tipo != -1){        
-        e1.type = e.type;
-        strcpy(e1.dir, id);
-        cuadrupla c;
-        c.op = ASSIGNATION;
-        strcpy(c.op1, reducir(e.dir, tipo, e.type));
-        strcpy(c.op2, "");
-        strcpy(c.res, id);
-        insert_cuad(&codigo_intermedio, c);  
-        
-    }else{
-        yyerror("El identificador no fue declarado\n");
-    }
-    return e1;
+exp asignacion(char *id, char *id2, exp e, int trecibido){
+	exp e1;
+	if(trecibido == -1) {
+		int tipo;
+		int es_estruct = 0;
+		if(strcmp(id2, "") == 0) {
+			tipo = get_type(masterchef->st, id);
+		} else {
+			es_estruct = 1;
+			int renglon = search(masterchef->st, id);
+			if (renglon == -1) {
+				yyerror("El identificador no fue declarado\n");
+				exit(1);
+			}
+			typetab tabla_tipos_actual= (*masterchef->tt);
+			int tiene_struct = tabla_tipos_actual.trs[masterchef->st->symbols[renglon].type].base.renglon;
+			if(tiene_struct == -2) {
+				symtab *st_struct = tabla_tipos_actual.trs[masterchef->st->symbols[renglon].type].base.smt->st;
+
+				int renglon2 = search(st_struct, id2);
+				if (renglon2 == -1) {
+					yyerror("El identificador no fue declarado\n");
+					exit(1);
+				}
+				tipo = get_type(st_struct, id2);
+			} else {
+				yyerror2("Intento de acceso a atributo de no estructura: ", id);
+				exit(1);
+			}
+		}
+
+		if( tipo != -1){        
+			e1.type = e.type;
+			strcpy(e1.dir, id);
+			cuadrupla c;
+			c.op = ASSIGNATION;
+			strcpy(c.op1, reducir(e.dir, tipo, e.type));
+			strcpy(c.op2, "");
+			if(es_estruct == 1) {
+				char id_con_punto[65];
+				strcpy(id_con_punto, id);
+				strcat(id_con_punto, ".");
+				strcat(id_con_punto, id2);
+				strcpy(c.res, id_con_punto);
+			} else {
+				strcpy(c.res, id);
+			}
+			insert_cuad(&codigo_intermedio, c);  
+			
+		}else{
+			yyerror("El identificador no fue declarado\n");
+			exit(1);
+		}
+	} else {
+		// VARARR
+		e1.type = e.type;
+		strcpy(e1.dir, id);
+		cuadrupla c;
+		c.op = ASSIGNATION;
+		strcpy(c.op1, reducir(e.dir, trecibido, e.type));
+		strcpy(c.op2, "");
+		strcpy(c.res, id);//en este caso id es la representacin de vararr
+		insert_cuad(&codigo_intermedio, c);  
+
+	}
+		return e1;
 }
 
 exp get_numero(numero n){
@@ -642,7 +720,7 @@ exp envolver_caracter(caracter caractercito) {
 exp envolver_varr(varr arreglito) {
     exp e;
     e.type = arreglito.type;
-    strcpy(e.dir, arreglito.dir);
+    strcpy(e.dir, arreglito.representacion);
     return e;
 }
 
@@ -717,7 +795,6 @@ char *reducir(char *dir, int t1, int t2){
         printf("perdida de información se esta asignando un double a un int\n");
         return t;
     }        
-    
     if( t1 ==1 && t2 == 2) {
         c.op = EQ;
         strcpy(c.op1, "(float)");
@@ -728,6 +805,7 @@ char *reducir(char *dir, int t1, int t2){
         printf("perdida de información se esta asignando un double a un float\n");
         return t;
     }            
+	//faltan casos inconsistentes chars vs numeros vs arrays
 }
 
 char* newTemp(){
@@ -762,6 +840,15 @@ char* newIndex(){
 
 void yyerror(char *msg) {
 	printf("%s\n", msg);
+}
+
+void yyerror2(char *c, char *c2){
+    strcat(c, c2);
+	yyerror(c);
+}
+
+void finish(){    
+    print_code(&codigo_intermedio);    
 }
 
 int main(int argc, char **argv) {

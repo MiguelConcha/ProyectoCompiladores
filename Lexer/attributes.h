@@ -8,6 +8,13 @@ typedef struct _type{
 	int bytes;
 } type;
 
+
+typedef struct _pii{
+	char id1[32];
+	char id2[32];
+	int type;
+} pii;
+
 typedef struct _exp{
 	char dir[32];
 	int type;
@@ -17,6 +24,7 @@ typedef struct _varr{
 	char dir[32];
 	typetab* tt;
 	int type;
+	char representacion[165];
 } varr;
 
 typedef struct _numero{

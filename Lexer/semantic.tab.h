@@ -104,7 +104,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 73 "semantic.y" /* yacc.c:1909  */
+#line 74 "semantic.y" /* yacc.c:1909  */
 
 	struct {
 		int cantidad;
@@ -115,6 +115,7 @@ union YYSTYPE
     caracter car;    
     arreglo arr;    
     char id[32];
+	pii pi;	
     exp expresion;
     type tipo;
     struct{
@@ -128,7 +129,7 @@ union YYSTYPE
     } siguientesp;
     int rel;
 
-#line 132 "semantic.tab.h" /* yacc.c:1909  */
+#line 133 "semantic.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

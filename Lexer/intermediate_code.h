@@ -22,7 +22,7 @@ typedef struct _cuadrupla{
 	int op;
 	char op1[32];
 	char op2[32];
-	char res[32];
+	char res[65];
 }cuadrupla;
 
 	

@@ -12,8 +12,8 @@ TP	:
 n1  [0-9]+\.[0-9]*
 n2	\.[0-9]+
 ID [_a-zA-Z][_a-zA-Z0-9]{0,31}	
-int	[+-]?[0-9]+
-decimal [+-]?({n1}|{n2})
+int	[0-9]+
+decimal ({n1}|{n2})
 double {decimal}|{int}	
 float	{double}[Ff]
 cadena \"[\x00-\x21\x23-\x7F]*\" 

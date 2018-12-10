@@ -84,9 +84,14 @@ lista:
 ;
 
 numero:
-	  INT 
-	  | DOUBLE 
-	  | FLOAT 
+	  signo INT 
+	  | signo DOUBLE 
+	  | signo FLOAT 
+;
+
+signo: PLUS
+	   | MINUS
+	   | %empty
 ;
 
 arreglo:
