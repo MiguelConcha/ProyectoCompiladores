@@ -39,18 +39,42 @@
 	/* Variable para la tabla de símbolos*/
 	struct mastertab *masterchef;
 
-	/* Variable papra guardar el código intermedio que se va generando */
+	/* Variable para guardar el código intermedio que se va generando */
 	ic codigo_intermedio;
 
 
 	/* Funciones auxiliares al análisis semántico y generación de código intermedio */
 	void init();
+
+	exp suma(exp e1, exp e2);
+	exp resta(exp e1, exp e2);
+	exp multiplicacion(exp e1, exp e2);
+	exp division(exp e1, exp e2);
+	exp modulo(exp e1, exp e2);
+	exp get_numero(numero);
+	exp identificador(char *);
+	exp asignacion(char *id, exp e);
+
+    exp envolver_varr(varr);
+    exp envolver_cadena(cadena);
+    exp envolver_caracter(caracter);
+
+ 	int max(int t1, int t2);
+  	char *ampliar(char *dir, int t1, int t2);
+  	char *reducir(char *dir, int t1, int t2);
+
+  	/* Funciones para generar temporales, etiquetas e indices */
+	char *newTemp();
+	char *newLabel();
+	char *newIndex();
+
 %}
 
 %union {
 	struct {
 		int cantidad;
 	} cant;
+    varr vararr;
     numero num;    
     cadena cad;    
     caracter car;    
@@ -121,6 +145,10 @@
 %type<arr> arreglo
 %type<cant> decls
 %type<cant> lista
+%type<expresion> exp
+%type<vararr> var_arr
+%type<rel> rel
+%type<booleanos> cond
 
 %start prog
 
@@ -139,7 +167,7 @@ decls:
 		current_dim_arr = current_dim; 
 		current_arr_type = current_type;
      } 
-	 lista SEMICOLON decls {$$.cantidad = $3.cantidad; $$.cantidad += $5.cantidad ; printf("tam decls %d\n", $$.cantidad); } /*no estamos seguros*/
+	 lista SEMICOLON decls {$$.cantidad = $3.cantidad; $$.cantidad += $5.cantidad; } /*no estamos seguros*/
 	 | %empty { $$.cantidad = 0; }
 ;
 
@@ -278,21 +306,61 @@ parte_izq:
 ;
 
 var_arr:
-	   ID LBRACKET exp RBRACKET  
-       | var_arr LBRACKET exp RBRACKET 
+	   ID LBRACKET exp RBRACKET { if($3.type != 0) { 
+                                    yyerror("Debes indexar el arreglo con un entero.\n"); 
+                                  }
+                                  struct nodo* it = stack_masterchefs;
+                                  int encontrado = 0;
+                                  while(it != NULL) {
+                                    int x = search(it->tabla->st, $1); 
+                                    if(x != -1) {
+                                        encontrado = 1;
+                                        int type_row = it->tabla->st->symbols[x].type;
+                                        $$.type = it->tabla->tt->trs[type_row].base.renglon;
+                                        if($$.type == -1) {
+                                            yyerror("No seas pendejo. Mayor cantidad de dimensiones que las definidas");
+                                            exit(1);
+                                        }
+                                        break;
+                                    }
+                                    it = it->siguiente;
+                                  }
+                                  if(!encontrado) {
+                                    yyerror("El arreglo no fue declarado antes.\n");
+                                    exit(1);
+                                  } 
+                                  $$.tt = it->tabla->tt; }//valor   
+       | var_arr LBRACKET exp RBRACKET { 
+                                  if($3.type != 0) { 
+                                    yyerror("Debes indexar el arreglo con un entero.\n"); 
+                                  }
+                                  if($1.type == -1) {
+                                    yyerror("No seas pendejo. Mayor cantidad de dimensiones que las definidas");
+                                    exit(1);
+                                  }  
+                                  int row_hijo = $1.type;
+                                  $$.type = (*$1.tt).trs[row_hijo].base.renglon;
+                                  if($$.type == -1) {
+                                    yyerror("No seas pendejo. Mayor cantidad de dimensiones que las definidas");
+                                    exit(1);
+                                  }  
+                                  $$.tt = $1.tt;
+
+       }
 ;
 
 exp:
-   exp PLUS exp  
-   | exp MINUS exp 
-   | exp PROD exp 
-   | exp DIV exp 
-   | exp MOD exp 
-   | var_arr 
-   | CADENA 
-   | numero 
-   | CARACTER 
-   | ID LPAR params RPAR 
+   exp PLUS exp { $$ = suma($1, $3); printf("E -> E + E\n"); }  
+   | exp MINUS exp { $$ = resta($1, $3); printf("E -> E - E\n"); }  
+   | exp PROD exp { $$ = multiplicacion($1, $3); printf("E -> E * E\n"); } 
+   | exp DIV exp { $$ = division($1, $3); printf("E -> E / E\n"); } 
+   | exp MOD exp { $$ = modulo($1, $3); printf("E -> E mod E\n"); } 
+   | var_arr { $$ = envolver_varr($1); printf("E -> id[E]\n"); }
+   | ID { $$ = identificador($1); printf("E->id\n"); printf("%s\n",$1); } 
+   | CADENA { $$ = envolver_cadena($1); printf("E -> CADENA\n"); }
+   | numero { $$ = get_numero($1); printf("E->numero\n"); printf("%s\n",$1.val); }
+   | CARACTER { $$ = envolver_caracter($1); printf("E -> CARACTER\n"); }
+   | ID LPAR params RPAR {}
 ;
 
 params:
@@ -306,22 +374,110 @@ lista_param:
 ;
 
 cond:
-	cond OR cond 
-    | cond AND cond 
-    | NOT cond 
-    | LPAR cond RPAR 
-    | exp rel exp 
-    | TRUE 
-    | FALSE 
+	cond OR {
+        cuadrupla c;
+        c.op = LABEL;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, get_first(&$1.falses));
+        insert_cuad(&codigo_intermedio, c);                    
+    } cond { 
+        char label[32];
+        strcpy(label, newLabel());
+        backpatch(&$1.falses, label, &codigo_intermedio);
+        $$.trues = merge(&$1.trues, &$4.trues);
+        $$.falses = $4.falses;
+        printf("B -> B || B\n");
+    }
+    | cond AND {
+        cuadrupla c;
+        c.op = LABEL;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, get_first(&$1.trues));
+        insert_cuad(&codigo_intermedio, c);                    
+    } cond {
+        char label[32];
+        strcpy(label, newLabel());                        
+        $$.falses = merge(&$1.falses, &$4.falses);
+        $$.trues = $4.trues;
+        backpatch(&$1.trues, label, &codigo_intermedio);
+        printf("B -> B && B\n");
+    }
+    | NOT cond {
+        $$.falses = $2.trues;
+        $$.trues = $2.falses;
+        printf("B -> !B\n");
+    }
+    | LPAR cond RPAR {
+        $$.trues = $2.trues;
+        $$.falses = $2.falses;
+        printf("B->(B)\n");
+    }
+    | exp rel exp {
+        char i[32];
+        char i2[32];
+        char temp[32];
+        strcpy(i, newIndex());
+        strcpy(i2, newIndex());
+        strcpy(temp, newTemp());
+        $$.trues = create_list(i);
+        $$.falses = create_list(i2);
+        cuadrupla c, c1, c2;
+        c.op = $2 ;
+        strcpy(c.op1, $1.dir);
+        strcpy(c.op2, $3.dir);
+        strcpy(c.res, temp);            
+        
+        c1.op = IFF;
+        strcpy(c1.op1, temp);
+        strcpy(c1.op2, "GOTO");
+        strcpy(c1.res, i);            
+        
+        c2.op = GOTO;
+        strcpy(c2.op1, "");
+        strcpy(c2.op2, "");
+        strcpy(c2.res, i2);
+        
+        insert_cuad(&codigo_intermedio, c);
+        insert_cuad(&codigo_intermedio, c1);
+        insert_cuad(&codigo_intermedio, c2);
+        printf("B->E rel E\n");
+        printf("E1.dir %s rel E2.dir %s\n", $1.dir, $3.dir);
+    }
+    | TRUE {
+        char i[32];
+        strcpy(i, newIndex());
+        $$.trues = create_list(i);
+        cuadrupla c;
+        c.op = GOTO;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, i);
+        insert_cuad(&codigo_intermedio, c);
+        printf("B->true\n");
+    } 
+    | FALSE {
+        char i[32];
+        strcpy(i, newIndex());
+        $$.falses = create_list(i);
+        cuadrupla c;
+        c.op = GOTO;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, i);
+        insert_cuad(&codigo_intermedio, c);
+        printf("B->false\n");
+    } 
 ;
 
 rel:
-   LT 
-   | GT 
-   | LEQ  
-   | GEQ 
-   | NEQ 
-   | EQ 
+   LT { $$ = LESS_THAN; printf("R-> <\n"); }
+   | GT { $$ = GREATER_THAN; printf("R-> >\n"); }
+   | LEQ { $$ = LESS_OR_EQUAL_THAN; printf("R-> <=\n"); }
+   | GEQ { $$ = GREATER_OR_EQUAL_THAN; printf("R-> >=\n"); }
+   | NEQ { $$ = NOT_EQUALS; printf("R-> !=\n"); }
+   | EQ { $$ = EQUALS; printf("R-> ==\n"); } 
 ;
 		
 %%
@@ -337,8 +493,271 @@ void init(){
 
 	stack_masterchefs = mete(stack_masterchefs, masterchef);
 
-    //create_code(&codigo_intermedio);
-    //create_labels(&lfalses);    
+    create_code(&codigo_intermedio);
+    create_labels(&lfalses);    
+}
+
+int max(int t1, int t2){
+	if( t1==t2) return t1;
+	if( t1 ==0 && t2 == 1) return 1;
+	if( t1 ==1 && t2 == 0) return 1;
+	if( t1 ==0 && t2 == 2) return 2;
+	if( t1 ==2 && t2 == 0) return 2;
+	if( t1 ==2 && t2 == 1) return 2;
+	if( t1 ==1 && t2 == 2) return 2;
+	else return -1;
+}
+
+exp suma(exp e1, exp e2){
+    exp e;
+    cuadrupla c;
+    e.type = max(e1.type, e2.type);
+    if( e.type==-1) yyerror("Error de tipos");
+    else{
+        char t[32];
+        strcpy(t,newTemp());
+        strcpy(e.dir, t);
+        c.op = MAS;
+        strcpy(c.op1, ampliar(e1.dir, e1.type, e.type));
+        strcpy(c.op2, ampliar(e2.dir, e2.type, e.type));
+        strcpy(c.res, t);
+        insert_cuad(&codigo_intermedio, c);
+    }
+    return e;    
+}
+
+exp resta(exp e1, exp e2){
+    exp e;
+    cuadrupla c;
+    char t[32];
+    e.type = max(e1.type, e2.type);
+    
+    if( e.type==-1) yyerror("Error de tipos");
+    else{
+        strcpy(t,newTemp());
+        strcpy(e.dir, t);
+        c.op = MENOS;
+        strcpy(c.op1, ampliar(e1.dir, e1.type, e.type));
+        strcpy(c.op2, ampliar(e2.dir, e2.type, e.type));
+        strcpy(c.res, t);
+        insert_cuad(&codigo_intermedio, c);
+    }
+    return e;    
+}
+
+exp multiplicacion(exp e1, exp e2){
+    exp e;
+    cuadrupla c;
+    e.type = max(e1.type, e2.type);
+    if( e.type==-1) yyerror("Error de tipos");
+    else{
+        char t[32];
+        strcpy(t,newTemp());
+        strcpy(e.dir, t);
+        c.op = MULTIPLICACION;
+        strcpy(c.op1, ampliar(e1.dir, e1.type, e.type));
+        strcpy(c.op2, ampliar(e2.dir, e2.type, e.type));
+        strcpy(c.res, t);
+        insert_cuad(&codigo_intermedio, c);
+    }
+    return e;    
+}
+
+exp division(exp e1, exp e2){
+    exp e;
+    cuadrupla c;
+    e.type = max(e1.type, e2.type);
+    if( e.type==-1) yyerror("Error de tipos");
+    else{
+        char t[32];
+        strcpy(t,newTemp());
+        strcpy(e.dir, t);
+        c.op = DIVISION;
+        strcpy(c.op1, ampliar(e1.dir, e1.type, e.type));
+        strcpy(c.op2, ampliar(e2.dir, e2.type, e.type));
+        strcpy(c.res, t);
+        insert_cuad(&codigo_intermedio, c);
+    }
+    return e;    
+}
+
+exp modulo(exp e1, exp e2){
+    exp e;
+    cuadrupla c;
+    e.type = max(e1.type, e2.type);
+    if( e.type==-1) yyerror("Error de tipos");
+    else{
+        char t[32];
+        strcpy(t,newTemp());
+        strcpy(e.dir, t);
+        c.op = MODULO;
+        strcpy(c.op1, ampliar(e1.dir, e1.type, e.type));
+        strcpy(c.op2, ampliar(e2.dir, e2.type, e.type));
+        strcpy(c.res, t);
+        insert_cuad(&codigo_intermedio, c);
+    }
+    return e;    
+}
+
+exp asignacion(char *id, exp e){
+    exp e1;
+    int tipo = get_type(masterchef->st, id);
+    if( tipo != -1){        
+        e1.type = e.type;
+        strcpy(e1.dir, id);
+        cuadrupla c;
+        c.op = ASSIGNATION;
+        strcpy(c.op1, reducir(e.dir, tipo, e.type));
+        strcpy(c.op2, "");
+        strcpy(c.res, id);
+        insert_cuad(&codigo_intermedio, c);  
+        
+    }else{
+        yyerror("El identificador no fue declarado\n");
+    }
+    return e1;
+}
+
+exp get_numero(numero n){
+    exp e;
+    e.type = n.type;
+    strcpy(e.dir, n.val);
+    return e;
+}
+
+exp envolver_cadena(cadena cadenita) {
+    exp e;
+    e.type = cadenita.type;
+    strcpy(e.dir, cadenita.val);
+    return e;
+}
+
+exp envolver_caracter(caracter caractercito) {
+    exp e;
+    e.type = caractercito.type;
+    e.dir[0] = caractercito.val;
+    return e;
+}
+
+exp envolver_varr(varr arreglito) {
+    exp e;
+    e.type = arreglito.type;
+    strcpy(e.dir, arreglito.dir);
+    return e;
+}
+
+exp identificador(char *id){
+    exp e;
+    if(search(masterchef->st, id)!=-1){
+        e.type = get_type(masterchef->st, id);
+        strcpy(e.dir, id);
+    }else{
+        yyerror("Error semantico: el identificador no existe");
+    }
+    return e;
+}
+
+char *ampliar(char *dir, int t1, int t2){
+    cuadrupla c;
+    char *t= (char*) malloc(32*sizeof(char));
+    
+    if( t1==t2) return dir;
+    if( t1 ==0 && t2 == 1){
+        c.op = EQ;
+        strcpy(c.op1, "(float)");
+        strcpy(c.op2, dir);
+        strcpy(t, newTemp());
+        strcpy(c.res, t);
+        insert_cuad(&codigo_intermedio, c);
+        return t;
+    }        
+    if( t1 ==0 && t2 == 2){
+        c.op = EQ;
+        strcpy(c.op1, "(double)");
+        strcpy(c.op2, dir);
+        strcpy(t, newTemp());
+        strcpy(c.res, t);
+        insert_cuad(&codigo_intermedio, c);
+        return t;
+    }        
+    
+    if( t1 ==1 && t2 == 2) {
+        c.op = EQ;
+        strcpy(c.op1, "(double)");
+        strcpy(c.op2, dir);
+        strcpy(t, newTemp());
+        strcpy(c.res, t);
+        insert_cuad(&codigo_intermedio, c);
+        return t;
+    }            
+}
+
+char *reducir(char *dir, int t1, int t2){
+    cuadrupla c;
+    char *t= (char*) malloc(32*sizeof(char));
+    
+    if( t1==t2) return dir;
+    if( t1 ==0 && t2 == 1){
+        c.op = EQ;
+        strcpy(c.op1, "(int)");
+        strcpy(c.op2, dir);
+        strcpy(t, newTemp());
+        strcpy(c.res, t);
+        insert_cuad(&codigo_intermedio, c);
+        printf("perdida de información se esta asignando un float a un int\n");
+        return t;
+    }        
+    if( t1 ==0 && t2 == 2){
+        c.op = EQ;
+        strcpy(c.op1, "(int)");
+        strcpy(c.op2, dir);
+        strcpy(t, newTemp());
+        strcpy(c.res, t);
+        insert_cuad(&codigo_intermedio, c);
+        printf("perdida de información se esta asignando un double a un int\n");
+        return t;
+    }        
+    
+    if( t1 ==1 && t2 == 2) {
+        c.op = EQ;
+        strcpy(c.op1, "(float)");
+        strcpy(c.op2, dir);
+        strcpy(t, newTemp());
+        strcpy(c.res, t);
+        insert_cuad(&codigo_intermedio, c);
+        printf("perdida de información se esta asignando un double a un float\n");
+        return t;
+    }            
+}
+
+char* newTemp(){
+    char *temporal= (char*) malloc(32*sizeof(char));
+    strcpy(temporal , "t");
+    char num[30];
+    sprintf(num, "%d", temp);
+    strcat(temporal, num);
+    temp++;
+    return temporal;
+}
+
+char* newLabel(){
+    char *temporal= (char*) malloc(32*sizeof(char));
+    strcpy(temporal , "L");
+    char num[30];
+    sprintf(num, "%d", label);
+    strcat(temporal, num);
+    label++;
+    return temporal;
+}
+
+char* newIndex(){
+    char *temporal= (char*) malloc(32*sizeof(char));
+    strcpy(temporal , "I");
+    char num[30];
+    sprintf(num, "%d", indice);
+    strcat(temporal, num);
+    indice++;
+    return temporal;
 }
 
 void yyerror(char *msg) {

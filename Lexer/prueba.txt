@@ -14,3 +14,4 @@ struct {
 	float z;
 } v;
 int as;
+f + d

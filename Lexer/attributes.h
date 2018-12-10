@@ -1,6 +1,8 @@
 #ifndef ATTRIBUTES_H
 #define ATTRIBUTES_H
-    
+
+#include "mastertab.h"
+
 typedef struct _type{
 	int type;
 	int bytes;
@@ -10,6 +12,12 @@ typedef struct _exp{
 	char dir[32];
 	int type;
 } exp;
+
+typedef struct _varr{
+	char dir[32];
+	typetab* tt;
+	int type;
+} varr;
 
 typedef struct _numero{
 	int type;
@@ -22,7 +30,8 @@ typedef struct _caracter{
 } caracter;
 
 typedef struct _cadena{
-	char val[100];
+	int type;
+	char val[32];
 } cadena;
 
 typedef struct _arreglo{

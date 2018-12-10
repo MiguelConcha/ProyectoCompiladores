@@ -22,59 +22,63 @@ void print_code(ic* code){
     for(i=0; i < code->count; i++){
         cuadrupla temporal = code->c[i];
         switch(temporal.op){
-            case GOTO2:
+            case GOTO:
                 fprintf(CODIGO, "goto %s\n", temporal.res);
                 printf("goto %s\n", temporal.res);
                 break;
-            case IFF2:
+            case IFF:
                 fprintf(CODIGO, "if %s goto %s\n", temporal.op1, temporal.res);
                 printf("if %s goto %s\n", temporal.op1, temporal.res);
                 break;
-            case LT2:
+            case LESS_THAN:
                 fprintf(CODIGO, "%s = %s < %s\n", temporal.res, temporal.op1, temporal.op2);
                 printf("%s = %s < %s\n", temporal.res, temporal.op1, temporal.op2);
                 break;
-            case GT2:
+            case GREATER_THAN:
                 fprintf(CODIGO, "%s = %s > %s\n", temporal.res, temporal.op1, temporal.op2);
                 printf("%s = %s > %s\n", temporal.res, temporal.op1, temporal.op2);
                 break;
-            case LE2:
+            case LESS_OR_EQUAL_THAN:
                 fprintf(CODIGO, "%s = %s <= %s\n", temporal.res, temporal.op1, temporal.op2);
                 printf("%s = %s <= %s\n", temporal.res, temporal.op1, temporal.op2);
                 break;
-            case GE2:
+            case GREATER_OR_EQUAL_THAN:
                 fprintf(CODIGO, "%s = %s >= %s\n", temporal.res, temporal.op1, temporal.op2);
                 printf("%s = %s >= %s\n", temporal.res, temporal.op1, temporal.op2);
                 break;
-            case EQ2:
+            case EQUALS:
                 fprintf(CODIGO, "%s = %s == %s\n", temporal.res, temporal.op1, temporal.op2);
                 printf("%s = %s == %s\n", temporal.res, temporal.op1, temporal.op2);
                 break;
-            case NE2:
+            case NOT_EQUALS:
                 fprintf(CODIGO, "%s = %s != %s\n", temporal.res, temporal.op1, temporal.op2);
                 printf("%s = %s != %s\n", temporal.res, temporal.op1, temporal.op2);
                 break;
-            case MA2:
+            case MAS:
                 fprintf(CODIGO, "%s = %s + %s\n", temporal.res, temporal.op1, temporal.op2);
                 printf("%s = %s + %s\n", temporal.res, temporal.op1, temporal.op2);
                 break;
-            case MEN2:
+            case MENOS:
                 fprintf(CODIGO, "%s = %s - %s\n", temporal.res, temporal.op1, temporal.op2);
                 printf("%s = %s - %s\n", temporal.res, temporal.op1, temporal.op2);
                 break;
-            case ML2:
+            case MULTIPLICACION:
                 fprintf(CODIGO, "%s = %s * %s\n", temporal.res, temporal.op1, temporal.op2);
                 printf("%s = %s * %s\n", temporal.res, temporal.op1, temporal.op2);
                 break;
-            case DV2:
+            case DIVISION:
                 fprintf(CODIGO, "%s = %s / %s\n", temporal.res, temporal.op1, temporal.op2);
                 printf("%s = %s / %s\n", temporal.res, temporal.op1, temporal.op2);
                 break;
-            case LB2:
+            case MODULO:
+                fprintf(CODIGO, "%s = %s / %s\n", temporal.res, temporal.op1, temporal.op2);
+                printf("%s = %s / %s\n", temporal.res, temporal.op1, temporal.op2);
+                break;
+            case LABEL:
                 fprintf(CODIGO, "%s:", temporal.res);
                 printf("%s:", temporal.res);
                 break;
-            case AS2:
+            case ASSIGNATION:
                 fprintf(CODIGO, "%s = %s\n", temporal.res, temporal.op1);
                 printf("%s = %s\n", temporal.res, temporal.op1);
                 break;
