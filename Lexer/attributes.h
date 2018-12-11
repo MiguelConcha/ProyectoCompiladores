@@ -2,6 +2,7 @@
 #define ATTRIBUTES_H
 
 #include "mastertab.h"
+#include "intermediate_code.h"
 
 typedef struct _type{
 	int type;
@@ -16,8 +17,10 @@ typedef struct _pii{
 } pii;
 
 typedef struct _exp{
+	cuadrupla arr_codigo[100];
 	char dir[32];
 	int type;
+	int count_codigo;
 } exp;
 
 typedef struct _varr{
@@ -29,7 +32,7 @@ typedef struct _varr{
 
 typedef struct _numero{
 	int type;
-	char val[32];
+	char val[33];
 } numero;
 
 typedef struct _caracter{
@@ -49,8 +52,10 @@ typedef struct _arreglo{
 
 
 typedef struct _labels{
+	cuadrupla arr_codigo[100];
 	char label[100][32];
 	int count;
+	int count_codigo;
 } labels;
 
 char *pop_label(labels*);

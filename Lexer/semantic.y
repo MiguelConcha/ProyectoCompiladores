@@ -60,6 +60,7 @@
     exp envolver_cadena(cadena);
     exp envolver_caracter(caracter);
 
+	void meter_assign(cuadrupla [], int);
  	int max(int t1, int t2);
   	char *ampliar(char *dir, int t1, int t2);
   	char *reducir(char *dir, int t1, int t2);
@@ -94,6 +95,7 @@
         int ifelse;
     } siguientesp;
     int rel;
+	char char_signo[1];
 }
 
 
@@ -151,9 +153,10 @@
 %type<vararr> var_arr
 %type<rel> rel
 %type<booleanos> cond
-%type<siguientes> sent sents
+%type<siguientes> sent sents assign
 %type<siguientesp> sentp
 %type<pi> parte_izq
+%type<char_signo> signo
 
 %start prog
 
@@ -163,7 +166,21 @@ prog:
 	{ init(); } decls 
 	{ print_type_table(masterchef->tt); print_table(masterchef->st); }
 
-	sent /*funcs*/ { finish(); }
+	sent
+    {
+        printf("%s\n", "Al final de sent");
+        cuadrupla c;
+        char label[32];
+        c.op = LABEL;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, get_first(&$4));
+        insert_cuad(&codigo_intermedio, c);                
+        strcpy(label, newLabel());                                                
+        backpatch(&$4, label, &codigo_intermedio);
+        printf("P -> D SS\n");finish();
+    }
+ /*funcs*/ { finish(); }
 ;
 
 decls:
@@ -234,15 +251,15 @@ lista:
 ;
 
 numero:
-	signo INT { $$.type = $2.type; strcpy($$.val, $2.val); }
-	| signo DOUBLE { $$.type = $2.type; strcpy($$.val, $2.val); }
-	| signo FLOAT { $$.type = $2.type; strcpy($$.val, $2.val); }
+	signo INT { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
+	| signo DOUBLE { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
+	| signo FLOAT { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
 ;
 
 signo: 
-	 PLUS
-	 | MINUS
-	 | %empty
+	 PLUS { strcpy($$,""); }
+	 | MINUS { strcpy($$, "-"); }
+	 | %empty { strcpy($$,""); }
 ;
 
 arreglo:
@@ -345,22 +362,74 @@ sent:
             printf("S->if(B)S else S\n");
         }
     }
-    | WHILE LPAR cond RPAR sent 
+    | WHILE LPAR cond RPAR sent {
+        char label[32], label2[32], temp[32];
+        strcpy(label, newIndex());                
+        strcpy(label2, newIndex());         
+        strcpy(temp, newTemp());
+		printf("tempito %s /n", temp);
+        $$ = $3.falses;
+        cuadrupla c1;
+        c1.op = IFF;
+        strcpy(c1.op2, "GOTO");
+        strcpy(c1.res, label);                
+        insert_cuad(&codigo_intermedio, c1);
+        backpatch(&$3.trues, label, &codigo_intermedio);
+        backpatch(&$3.falses, label2, &codigo_intermedio);
+        printf("S->while(B)S\n");
+    }
     | DO sent WHILE LPAR cond RPAR SEMICOLON 
-    | FOR LPAR sent SEMICOLON cond SEMICOLON sent RPAR sent  
-	| parte_izq ASSIG exp SEMICOLON {
+    | FOR LPAR assign SEMICOLON cond SEMICOLON assign RPAR sent {
+		meter_assign($3.arr_codigo, $3.count_codigo);
+        char label[32], label2[32], temp[32];
+        strcpy(label, newIndex());                
+        strcpy(label2, newIndex());         
+        strcpy(temp, newTemp());
+        printf("tempito %s /n", temp);
+        $$ = $5.falses;
+        cuadrupla c1;
+        c1.op = IFF;
+        strcpy(c1.op2, "GOTO");
+        strcpy(c1.res, label);                
+        insert_cuad(&codigo_intermedio, c1);
+        backpatch(&$5.trues, label, &codigo_intermedio);
+        backpatch(&$5.falses, label2, &codigo_intermedio);
+		meter_assign($7.arr_codigo, $7.count_codigo);
+        printf("S->for(ass; cond; ass) sent\n");
+    }
+	| assign SEMICOLON { meter_assign($1.arr_codigo, $1.count_codigo); }
+	| RETURN exp SEMICOLON
+	| RETURN SEMICOLON 
+	| LCURLYB sents RCURLYB {
+        char label[32];
+        $$ = $2;                
+        strcpy(label, newLabel());                
+        backpatch(&$2, label, &codigo_intermedio);                                
+        printf("S->{SS}\n");
+    }  
+	| SWITCH LPAR exp RPAR LCURLYB casos RCURLYB 
+	| BREAK SEMICOLON  
+	| PRINT exp SEMICOLON {
+        char i[32];
+        strcpy(i, newIndex());
+        $$ = create_list(i);
+        printf("S->print(E);\n");
+    }
+;
+
+assign: 
+	  parte_izq ASSIG exp {
                 char i[32];
                 strcpy(i, newIndex());
                 $$ = create_list(i);
-                asignacion($1.id1, $1.id2, $3, $1.type); 
+                exp e = asignacion($1.id1, $1.id2, $3, $1.type); 
                 printf("S->parte_izq = E;\n");
-			} 
-	| RETURN exp SEMICOLON
-	| RETURN SEMICOLON 
-	| LCURLYB sents RCURLYB  
-	| SWITCH LPAR exp RPAR LCURLYB casos RCURLYB 
-	| BREAK SEMICOLON  
-	| PRINT exp SEMICOLON 
+				int iterador;
+				$$.count_codigo = e.count_codigo;
+				for(iterador = 0; iterador < e.count_codigo; iterador++) {
+					$$.arr_codigo[iterador] = e.arr_codigo[iterador];
+				}
+	} 
 ;
 
 sentp:
@@ -506,6 +575,7 @@ cond:
     | LPAR cond RPAR {
         $$.trues = $2.trues;
         $$.falses = $2.falses;
+        //strcpy($$.dir, $2.dir);
         printf("B->(B)\n");
     }
     | exp rel exp {
@@ -515,6 +585,7 @@ cond:
         strcpy(i, newIndex());
         strcpy(i2, newIndex());
         strcpy(temp, newTemp());
+        //strcpy($$.dir, temp);
         $$.trues = create_list(i);
         $$.falses = create_list(i2);
         cuadrupla c, c1, c2;
@@ -699,6 +770,7 @@ exp modulo(exp e1, exp e2){
 
 exp asignacion(char *id, char *id2, exp e, int trecibido){
 	exp e1;
+	e1.count_codigo = 0;
 	if(trecibido == -1) {
 		int tipo;
 		int es_estruct = 0;
@@ -744,8 +816,9 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
 			} else {
 				strcpy(c.res, id);
 			}
-			insert_cuad(&codigo_intermedio, c);  
-			
+			//insert_cuad(&codigo_intermedio, c);  
+			e1.arr_codigo[e1.count_codigo] = c;	
+			e1.count_codigo++;
 		}else{
 			yyerror("El identificador no fue declarado\n");
 			exit(1);
@@ -759,9 +832,9 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
 		strcpy(c.op1, reducir(e.dir, trecibido, e.type));
 		strcpy(c.op2, "");
 		strcpy(c.res, id);//en este caso id es la representacin de vararr
-		insert_cuad(&codigo_intermedio, c);  
-
-	}
+		//insert_cuad(&codigo_intermedio, c);  
+		e1.arr_codigo[e1.count_codigo] = c;
+		e1.count_codigo++;}
 		return e1;
 }
 
@@ -918,6 +991,14 @@ void yyerror2(char *c, char *c2){
 
 void finish(){    
     print_code(&codigo_intermedio);    
+}
+
+void meter_assign(cuadrupla c[], int cou){
+	for(int j = 0; j < cou; j++){
+		insert_cuad(&codigo_intermedio, c[j]);
+		printf("metemos ass\n");
+		printf("%s, %s, %s, %d", c[j].op1, c[j].op2, c[j].res, c[j].op);
+	}
 }
 
 int main(int argc, char **argv) {
