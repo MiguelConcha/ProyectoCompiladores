@@ -139,8 +139,8 @@
 %right NOT
 %left LBRACKET RBRACKET
 %left LPAR RPAR  
-%nonassoc "then"
-%nonassoc ELSE
+%left IFX
+%left ELSE
 
 %type<tipo> tipo
 %type<num> numero
@@ -152,6 +152,7 @@
 %type<rel> rel
 %type<booleanos> cond
 %type<siguientes> sent sents
+%type<siguientesp> sentp
 %type<pi> parte_izq
 
 %start prog
@@ -286,13 +287,64 @@ parte_arr:
 ;
 
 sents:
-	 sents sent 
-     | sent 
+	sents {
+        cuadrupla c;
+        c.op = LABEL;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, get_first(&$1));
+        insert_cuad(&codigo_intermedio, c);                                
+    }
+    sent {
+        char label[32];
+        strcpy(label, newLabel());                                
+        $$ = $3;                
+        backpatch(&$1, label, &codigo_intermedio);                
+        printf("SS->SS S\n");
+    } 
+    | sent {
+        char label[32];
+        strcpy(label, newLabel());
+        $$ = $1;
+        backpatch(&$1, label, &codigo_intermedio);
+        printf("SS->S\n");
+    }
 ;
 
 sent:
-	IF LPAR cond RPAR sent 				 %prec "then"
-    | IF LPAR cond RPAR sent ELSE sent 
+	IF LPAR cond RPAR {
+        cuadrupla c;
+        c.op = LABEL;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, get_first(&$3.trues));
+        insert_cuad(&codigo_intermedio, c);
+    }
+    sent {
+        cuadrupla c, c1;
+        c.op = GOTO;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, get_first(&$6));
+        push_label(&lfalses, get_first(&$3.falses));
+        insert_cuad(&codigo_intermedio, c);
+    } sentp {
+        char label[32];
+        strcpy(label, newLabel());
+        
+        if($8.ifelse==false){
+            $$ = merge(&$3.falses, &$8.siguientes);
+            backpatch(&$3.falses, label, &codigo_intermedio);                                
+            printf("S->if(B) S\n");
+        }else{
+            char label2[32];                                    
+            strcpy(label2, newLabel());                
+            $$ = merge(&$6,&$8.siguientes);
+            backpatch(&$3.trues, label, &codigo_intermedio);
+            backpatch(&$3.falses, label2, &codigo_intermedio);                 
+            printf("S->if(B)S else S\n");
+        }
+    }
     | WHILE LPAR cond RPAR sent 
     | DO sent WHILE LPAR cond RPAR SEMICOLON 
     | FOR LPAR sent SEMICOLON cond SEMICOLON sent RPAR sent  
@@ -305,10 +357,27 @@ sent:
 			} 
 	| RETURN exp SEMICOLON
 	| RETURN SEMICOLON 
-	| LCURLYB sent RCURLYB  
+	| LCURLYB sents RCURLYB  
 	| SWITCH LPAR exp RPAR LCURLYB casos RCURLYB 
 	| BREAK SEMICOLON  
 	| PRINT exp SEMICOLON 
+;
+
+sentp:
+	{ printf("sin else\n"); $$.ifelse= false;} %prec IFX
+	| ELSE 
+        {        
+            cuadrupla c1;
+            c1.op = LABEL;
+            strcpy(c1.op1, "");
+            strcpy(c1.op2, "");
+            strcpy(c1.res, pop_label(&lfalses));
+            insert_cuad(&codigo_intermedio, c1);
+        } 
+    sent { 
+        $$.ifelse= true;
+        $$.siguientes = $3;
+    }
 ;
 
 casos:

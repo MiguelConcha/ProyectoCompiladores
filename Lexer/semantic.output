@@ -4,7 +4,6 @@ Nonterminals useless in grammar
    args
    lista_args
    parte_arr
-   sents
 
 
 Terminals unused in grammar
@@ -15,20 +14,17 @@ Terminals unused in grammar
 
 Rules useless in grammar
 
-   74 funcs: FUNC tipo ID LPAR args RPAR LCURLYB decls sents RCURLYB funcs
-   75      | %empty
+   81 funcs: FUNC tipo ID LPAR args RPAR LCURLYB decls sents RCURLYB funcs
+   82      | %empty
 
-   76 args: lista_args
-   77     | %empty
+   83 args: lista_args
+   84     | %empty
 
-   78 lista_args: lista_args COMMA tipo ID parte_arr
-   79           | tipo ID parte_arr
+   85 lista_args: lista_args COMMA tipo ID parte_arr
+   86           | tipo ID parte_arr
 
-   80 parte_arr: LBRACKET RBRACKET parte_arr
-   81          | %empty
-
-   82 sents: sents sent
-   83      | sent
+   87 parte_arr: LBRACKET RBRACKET parte_arr
+   88          | %empty
 
 
 Grammar
@@ -70,67 +66,81 @@ Grammar
    22 arreglo: LBRACKET numero RBRACKET arreglo
    23        | %empty
 
-   24 sent: IF LPAR cond RPAR sent
-   25     | IF LPAR cond RPAR sent ELSE sent
-   26     | WHILE LPAR cond RPAR sent
-   27     | DO sent WHILE LPAR cond RPAR SEMICOLON
-   28     | FOR LPAR sent SEMICOLON cond SEMICOLON sent RPAR sent
-   29     | parte_izq ASSIG exp SEMICOLON
-   30     | RETURN exp SEMICOLON
-   31     | RETURN SEMICOLON
-   32     | LCURLYB sent RCURLYB
-   33     | SWITCH LPAR exp RPAR LCURLYB casos RCURLYB
-   34     | BREAK SEMICOLON
-   35     | PRINT exp SEMICOLON
+   24 $@5: %empty
 
-   36 casos: CASE numero sent casos
-   37      | DEFAULT sent
-   38      | %empty
+   25 sents: sents $@5 sent
+   26      | sent
 
-   39 parte_izq: ID
-   40          | var_arr
-   41          | ID DOT ID
+   27 $@6: %empty
 
-   42 var_arr: ID LBRACKET exp RBRACKET
-   43        | var_arr LBRACKET exp RBRACKET
+   28 $@7: %empty
 
-   44 exp: exp PLUS exp
-   45    | exp MINUS exp
-   46    | exp PROD exp
-   47    | exp DIV exp
-   48    | exp MOD exp
-   49    | var_arr
-   50    | ID
-   51    | CADENA
-   52    | numero
-   53    | CARACTER
-   54    | ID LPAR params RPAR
+   29 sent: IF LPAR cond RPAR $@6 sent $@7 sentp
+   30     | WHILE LPAR cond RPAR sent
+   31     | DO sent WHILE LPAR cond RPAR SEMICOLON
+   32     | FOR LPAR sent SEMICOLON cond SEMICOLON sent RPAR sent
+   33     | parte_izq ASSIG exp SEMICOLON
+   34     | RETURN exp SEMICOLON
+   35     | RETURN SEMICOLON
+   36     | LCURLYB sents RCURLYB
+   37     | SWITCH LPAR exp RPAR LCURLYB casos RCURLYB
+   38     | BREAK SEMICOLON
+   39     | PRINT exp SEMICOLON
 
-   55 params: lista_param
-   56       | %empty
+   40 sentp: %empty
 
-   57 lista_param: lista_param COMMA exp
-   58            | exp
+   41 $@8: %empty
 
-   59 $@5: %empty
+   42 sentp: ELSE $@8 sent
 
-   60 cond: cond OR $@5 cond
+   43 casos: CASE numero sent casos
+   44      | DEFAULT sent
+   45      | %empty
 
-   61 $@6: %empty
+   46 parte_izq: ID
+   47          | var_arr
+   48          | ID DOT ID
 
-   62 cond: cond AND $@6 cond
-   63     | NOT cond
-   64     | LPAR cond RPAR
-   65     | exp rel exp
-   66     | TRUE
-   67     | FALSE
+   49 var_arr: ID LBRACKET exp RBRACKET
+   50        | var_arr LBRACKET exp RBRACKET
 
-   68 rel: LT
-   69    | GT
-   70    | LEQ
-   71    | GEQ
-   72    | NEQ
-   73    | EQ
+   51 exp: exp PLUS exp
+   52    | exp MINUS exp
+   53    | exp PROD exp
+   54    | exp DIV exp
+   55    | exp MOD exp
+   56    | var_arr
+   57    | ID
+   58    | CADENA
+   59    | numero
+   60    | CARACTER
+   61    | ID LPAR params RPAR
+
+   62 params: lista_param
+   63       | %empty
+
+   64 lista_param: lista_param COMMA exp
+   65            | exp
+
+   66 $@9: %empty
+
+   67 cond: cond OR $@9 cond
+
+   68 $@10: %empty
+
+   69 cond: cond AND $@10 cond
+   70     | NOT cond
+   71     | LPAR cond RPAR
+   72     | exp rel exp
+   73     | TRUE
+   74     | FALSE
+
+   75 rel: LT
+   76    | GT
+   77    | LEQ
+   78    | GEQ
+   79    | NEQ
+   80    | EQ
 
 
 Terminals, with rules where they appear
@@ -145,50 +155,50 @@ CHARTYPE (262) 10
 VOID (263) 11
 FUNC (264)
 STRUCT (265) 13
-LCURLYB (266) 13 32 33
-RCURLYB (267) 13 32 33
-LBRACKET (268) 22 42 43
-RBRACKET (269) 22 42 43
-SEMICOLON (270) 5 27 28 29 30 31 34 35
-DOT (271) 41
-TRUE (272) 66
-FALSE (273) 67
-IF (274) 24 25
-ELSE (275) 25
-WHILE (276) 26 27
-DO (277) 27
-SWITCH (278) 33
-CASE (279) 36
-DEFAULT (280) 37
-BREAK (281) 34
-PRINT (282) 35
-ID (283) 14 15 39 41 42 50 54
+LCURLYB (266) 13 36 37
+RCURLYB (267) 13 36 37
+LBRACKET (268) 22 49 50
+RBRACKET (269) 22 49 50
+SEMICOLON (270) 5 31 32 33 34 35 38 39
+DOT (271) 48
+TRUE (272) 73
+FALSE (273) 74
+IF (274) 29
+ELSE (275) 42
+WHILE (276) 30 31
+DO (277) 31
+SWITCH (278) 37
+CASE (279) 43
+DEFAULT (280) 44
+BREAK (281) 38
+PRINT (282) 39
+ID (283) 14 15 46 48 49 57 61
 INT (284) 16
 DOUBLE (285) 17
 FLOAT (286) 18
-CADENA (287) 51
-CARACTER (288) 53
-COMMA (289) 14 57
-RETURN (290) 30 31
-FOR (291) 28
-ASSIG (292) 29
-OR (293) 60
-AND (294) 62
-EQ (295) 73
-NEQ (296) 72
-GT (297) 69
-GEQ (298) 71
-LT (299) 68
-LEQ (300) 70
-PLUS (301) 19 44
-MINUS (302) 20 45
-PROD (303) 46
-DIV (304) 47
-MOD (305) 48
-NOT (306) 63
-LPAR (307) 24 25 26 27 28 33 54 64
-RPAR (308) 24 25 26 27 28 33 54 64
-"then" (309)
+CADENA (287) 58
+CARACTER (288) 60
+COMMA (289) 14 64
+RETURN (290) 34 35
+FOR (291) 32
+ASSIG (292) 33
+OR (293) 67
+AND (294) 69
+EQ (295) 80
+NEQ (296) 79
+GT (297) 76
+GEQ (298) 78
+LT (299) 75
+LEQ (300) 77
+PLUS (301) 19 51
+MINUS (302) 20 52
+PROD (303) 53
+DIV (304) 54
+MOD (305) 55
+NOT (306) 70
+LPAR (307) 29 30 31 32 37 61 71
+RPAR (308) 29 30 31 32 37 61 71
+IFX (309)
 
 
 Nonterminals, with rules where they appear
@@ -212,36 +222,47 @@ $@4 (62)
 lista (63)
     on left: 14 15, on right: 5 14
 numero (64)
-    on left: 16 17 18, on right: 22 36 52
+    on left: 16 17 18, on right: 22 43 59
 signo (65)
     on left: 19 20 21, on right: 16 17 18
 arreglo (66)
     on left: 22 23, on right: 14 15 22
-sent (67)
-    on left: 24 25 26 27 28 29 30 31 32 33 34 35, on right: 3 24 25
-    26 27 28 32 36 37
-casos (68)
-    on left: 36 37 38, on right: 33 36
-parte_izq (69)
-    on left: 39 40 41, on right: 29
-var_arr (70)
-    on left: 42 43, on right: 40 43 49
-exp (71)
-    on left: 44 45 46 47 48 49 50 51 52 53 54, on right: 29 30 33 35
-    42 43 44 45 46 47 48 57 58 65
-params (72)
-    on left: 55 56, on right: 54
-lista_param (73)
-    on left: 57 58, on right: 55 57
-cond (74)
-    on left: 60 62 63 64 65 66 67, on right: 24 25 26 27 28 60 62 63
-    64
-$@5 (75)
-    on left: 59, on right: 60
-$@6 (76)
-    on left: 61, on right: 62
-rel (77)
-    on left: 68 69 70 71 72 73, on right: 65
+sents (67)
+    on left: 25 26, on right: 25 36
+$@5 (68)
+    on left: 24, on right: 25
+sent (69)
+    on left: 29 30 31 32 33 34 35 36 37 38 39, on right: 3 25 26 29
+    30 31 32 42 43 44
+$@6 (70)
+    on left: 27, on right: 29
+$@7 (71)
+    on left: 28, on right: 29
+sentp (72)
+    on left: 40 42, on right: 29
+$@8 (73)
+    on left: 41, on right: 42
+casos (74)
+    on left: 43 44 45, on right: 37 43
+parte_izq (75)
+    on left: 46 47 48, on right: 33
+var_arr (76)
+    on left: 49 50, on right: 47 50 56
+exp (77)
+    on left: 51 52 53 54 55 56 57 58 59 60 61, on right: 33 34 37 39
+    49 50 51 52 53 54 55 64 65 72
+params (78)
+    on left: 62 63, on right: 61
+lista_param (79)
+    on left: 64 65, on right: 62 64
+cond (80)
+    on left: 67 69 70 71 72 73 74, on right: 29 30 31 32 67 69 70 71
+$@9 (81)
+    on left: 66, on right: 67
+$@10 (82)
+    on left: 68, on right: 69
+rel (83)
+    on left: 75 76 77 78 79 80, on right: 72
 
 
 State 0
@@ -402,7 +423,7 @@ State 15
 
 State 16
 
-   32 sent: LCURLYB . sent RCURLYB
+   36 sent: LCURLYB . sents RCURLYB
 
     LCURLYB  shift, and go to state 16
     IF       shift, and go to state 17
@@ -415,29 +436,29 @@ State 16
     RETURN   shift, and go to state 24
     FOR      shift, and go to state 25
 
-    sent       go to state 32
+    sents      go to state 32
+    sent       go to state 33
     parte_izq  go to state 27
     var_arr    go to state 28
 
 
 State 17
 
-   24 sent: IF . LPAR cond RPAR sent
-   25     | IF . LPAR cond RPAR sent ELSE sent
-
-    LPAR  shift, and go to state 33
-
-
-State 18
-
-   26 sent: WHILE . LPAR cond RPAR sent
+   29 sent: IF . LPAR cond RPAR $@6 sent $@7 sentp
 
     LPAR  shift, and go to state 34
 
 
+State 18
+
+   30 sent: WHILE . LPAR cond RPAR sent
+
+    LPAR  shift, and go to state 35
+
+
 State 19
 
-   27 sent: DO . sent WHILE LPAR cond RPAR SEMICOLON
+   31 sent: DO . sent WHILE LPAR cond RPAR SEMICOLON
 
     LCURLYB  shift, and go to state 16
     IF       shift, and go to state 17
@@ -450,80 +471,80 @@ State 19
     RETURN   shift, and go to state 24
     FOR      shift, and go to state 25
 
-    sent       go to state 35
+    sent       go to state 36
     parte_izq  go to state 27
     var_arr    go to state 28
 
 
 State 20
 
-   33 sent: SWITCH . LPAR exp RPAR LCURLYB casos RCURLYB
+   37 sent: SWITCH . LPAR exp RPAR LCURLYB casos RCURLYB
 
-    LPAR  shift, and go to state 36
+    LPAR  shift, and go to state 37
 
 
 State 21
 
-   34 sent: BREAK . SEMICOLON
+   38 sent: BREAK . SEMICOLON
 
-    SEMICOLON  shift, and go to state 37
+    SEMICOLON  shift, and go to state 38
 
 
 State 22
 
-   35 sent: PRINT . exp SEMICOLON
+   39 sent: PRINT . exp SEMICOLON
 
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
 
     $default  reduce using rule 21 (signo)
 
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 46
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 47
 
 
 State 23
 
-   39 parte_izq: ID .
-   41          | ID . DOT ID
-   42 var_arr: ID . LBRACKET exp RBRACKET
+   46 parte_izq: ID .
+   48          | ID . DOT ID
+   49 var_arr: ID . LBRACKET exp RBRACKET
 
-    LBRACKET  shift, and go to state 47
-    DOT       shift, and go to state 48
+    LBRACKET  shift, and go to state 48
+    DOT       shift, and go to state 49
 
-    $default  reduce using rule 39 (parte_izq)
+    $default  reduce using rule 46 (parte_izq)
 
 
 State 24
 
-   30 sent: RETURN . exp SEMICOLON
-   31     | RETURN . SEMICOLON
+   34 sent: RETURN . exp SEMICOLON
+   35     | RETURN . SEMICOLON
 
-    SEMICOLON  shift, and go to state 49
-    ID         shift, and go to state 38
-    CADENA     shift, and go to state 39
-    CARACTER   shift, and go to state 40
-    PLUS       shift, and go to state 41
-    MINUS      shift, and go to state 42
+    SEMICOLON  shift, and go to state 50
+    ID         shift, and go to state 39
+    CADENA     shift, and go to state 40
+    CARACTER   shift, and go to state 41
+    PLUS       shift, and go to state 42
+    MINUS      shift, and go to state 43
 
     $default  reduce using rule 21 (signo)
 
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 50
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 51
 
 
 State 25
 
-   28 sent: FOR . LPAR sent SEMICOLON cond SEMICOLON sent RPAR sent
+   32 sent: FOR . LPAR sent SEMICOLON cond SEMICOLON sent RPAR sent
 
-    LPAR  shift, and go to state 51
+    LPAR  shift, and go to state 52
 
 
 State 26
@@ -535,30 +556,30 @@ State 26
 
 State 27
 
-   29 sent: parte_izq . ASSIG exp SEMICOLON
+   33 sent: parte_izq . ASSIG exp SEMICOLON
 
-    ASSIG  shift, and go to state 52
+    ASSIG  shift, and go to state 53
 
 
 State 28
 
-   40 parte_izq: var_arr .
-   43 var_arr: var_arr . LBRACKET exp RBRACKET
+   47 parte_izq: var_arr .
+   50 var_arr: var_arr . LBRACKET exp RBRACKET
 
-    LBRACKET  shift, and go to state 53
+    LBRACKET  shift, and go to state 54
 
-    $default  reduce using rule 40 (parte_izq)
+    $default  reduce using rule 47 (parte_izq)
 
 
 State 29
 
    15 lista: ID . arreglo
 
-    LBRACKET  shift, and go to state 54
+    LBRACKET  shift, and go to state 55
 
     $default  reduce using rule 23 (arreglo)
 
-    arreglo  go to state 55
+    arreglo  go to state 56
 
 
 State 30
@@ -566,240 +587,251 @@ State 30
     5 decls: tipo $@3 lista . SEMICOLON decls
    14 lista: lista . COMMA ID arreglo
 
-    SEMICOLON  shift, and go to state 56
-    COMMA      shift, and go to state 57
+    SEMICOLON  shift, and go to state 57
+    COMMA      shift, and go to state 58
 
 
 State 31
 
    13 tipo: STRUCT LCURLYB $@4 decls . RCURLYB
 
-    RCURLYB  shift, and go to state 58
+    RCURLYB  shift, and go to state 59
 
 
 State 32
 
-   32 sent: LCURLYB sent . RCURLYB
+   25 sents: sents . $@5 sent
+   36 sent: LCURLYB sents . RCURLYB
 
-    RCURLYB  shift, and go to state 59
+    RCURLYB  shift, and go to state 60
+
+    $default  reduce using rule 24 ($@5)
+
+    $@5  go to state 61
 
 
 State 33
 
-   24 sent: IF LPAR . cond RPAR sent
-   25     | IF LPAR . cond RPAR sent ELSE sent
+   26 sents: sent .
 
-    TRUE      shift, and go to state 60
-    FALSE     shift, and go to state 61
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-    NOT       shift, and go to state 62
-    LPAR      shift, and go to state 63
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 64
-    cond     go to state 65
+    $default  reduce using rule 26 (sents)
 
 
 State 34
 
-   26 sent: WHILE LPAR . cond RPAR sent
+   29 sent: IF LPAR . cond RPAR $@6 sent $@7 sentp
 
-    TRUE      shift, and go to state 60
-    FALSE     shift, and go to state 61
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-    NOT       shift, and go to state 62
-    LPAR      shift, and go to state 63
+    TRUE      shift, and go to state 62
+    FALSE     shift, and go to state 63
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+    NOT       shift, and go to state 64
+    LPAR      shift, and go to state 65
 
     $default  reduce using rule 21 (signo)
 
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 64
-    cond     go to state 66
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 66
+    cond     go to state 67
 
 
 State 35
 
-   27 sent: DO sent . WHILE LPAR cond RPAR SEMICOLON
+   30 sent: WHILE LPAR . cond RPAR sent
 
-    WHILE  shift, and go to state 67
+    TRUE      shift, and go to state 62
+    FALSE     shift, and go to state 63
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+    NOT       shift, and go to state 64
+    LPAR      shift, and go to state 65
+
+    $default  reduce using rule 21 (signo)
+
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 66
+    cond     go to state 68
 
 
 State 36
 
-   33 sent: SWITCH LPAR . exp RPAR LCURLYB casos RCURLYB
+   31 sent: DO sent . WHILE LPAR cond RPAR SEMICOLON
 
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 68
+    WHILE  shift, and go to state 69
 
 
 State 37
 
-   34 sent: BREAK SEMICOLON .
+   37 sent: SWITCH LPAR . exp RPAR LCURLYB casos RCURLYB
 
-    $default  reduce using rule 34 (sent)
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+
+    $default  reduce using rule 21 (signo)
+
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 70
 
 
 State 38
 
-   42 var_arr: ID . LBRACKET exp RBRACKET
-   50 exp: ID .
-   54    | ID . LPAR params RPAR
+   38 sent: BREAK SEMICOLON .
 
-    LBRACKET  shift, and go to state 47
-    LPAR      shift, and go to state 69
-
-    $default  reduce using rule 50 (exp)
+    $default  reduce using rule 38 (sent)
 
 
 State 39
 
-   51 exp: CADENA .
+   49 var_arr: ID . LBRACKET exp RBRACKET
+   57 exp: ID .
+   61    | ID . LPAR params RPAR
 
-    $default  reduce using rule 51 (exp)
+    LBRACKET  shift, and go to state 48
+    LPAR      shift, and go to state 71
+
+    $default  reduce using rule 57 (exp)
 
 
 State 40
 
-   53 exp: CARACTER .
+   58 exp: CADENA .
 
-    $default  reduce using rule 53 (exp)
+    $default  reduce using rule 58 (exp)
 
 
 State 41
+
+   60 exp: CARACTER .
+
+    $default  reduce using rule 60 (exp)
+
+
+State 42
 
    19 signo: PLUS .
 
     $default  reduce using rule 19 (signo)
 
 
-State 42
+State 43
 
    20 signo: MINUS .
 
     $default  reduce using rule 20 (signo)
 
 
-State 43
-
-   52 exp: numero .
-
-    $default  reduce using rule 52 (exp)
-
-
 State 44
+
+   59 exp: numero .
+
+    $default  reduce using rule 59 (exp)
+
+
+State 45
 
    16 numero: signo . INT
    17       | signo . DOUBLE
    18       | signo . FLOAT
 
-    INT     shift, and go to state 70
-    DOUBLE  shift, and go to state 71
-    FLOAT   shift, and go to state 72
-
-
-State 45
-
-   43 var_arr: var_arr . LBRACKET exp RBRACKET
-   49 exp: var_arr .
-
-    LBRACKET  shift, and go to state 53
-
-    $default  reduce using rule 49 (exp)
+    INT     shift, and go to state 72
+    DOUBLE  shift, and go to state 73
+    FLOAT   shift, and go to state 74
 
 
 State 46
 
-   35 sent: PRINT exp . SEMICOLON
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
+   50 var_arr: var_arr . LBRACKET exp RBRACKET
+   56 exp: var_arr .
 
-    SEMICOLON  shift, and go to state 73
-    PLUS       shift, and go to state 74
-    MINUS      shift, and go to state 75
-    PROD       shift, and go to state 76
-    DIV        shift, and go to state 77
-    MOD        shift, and go to state 78
+    LBRACKET  shift, and go to state 54
+
+    $default  reduce using rule 56 (exp)
 
 
 State 47
 
-   42 var_arr: ID LBRACKET . exp RBRACKET
+   39 sent: PRINT exp . SEMICOLON
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
 
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 79
+    SEMICOLON  shift, and go to state 75
+    PLUS       shift, and go to state 76
+    MINUS      shift, and go to state 77
+    PROD       shift, and go to state 78
+    DIV        shift, and go to state 79
+    MOD        shift, and go to state 80
 
 
 State 48
 
-   41 parte_izq: ID DOT . ID
+   49 var_arr: ID LBRACKET . exp RBRACKET
 
-    ID  shift, and go to state 80
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+
+    $default  reduce using rule 21 (signo)
+
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 81
 
 
 State 49
 
-   31 sent: RETURN SEMICOLON .
+   48 parte_izq: ID DOT . ID
 
-    $default  reduce using rule 31 (sent)
+    ID  shift, and go to state 82
 
 
 State 50
 
-   30 sent: RETURN exp . SEMICOLON
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
+   35 sent: RETURN SEMICOLON .
 
-    SEMICOLON  shift, and go to state 81
-    PLUS       shift, and go to state 74
-    MINUS      shift, and go to state 75
-    PROD       shift, and go to state 76
-    DIV        shift, and go to state 77
-    MOD        shift, and go to state 78
+    $default  reduce using rule 35 (sent)
 
 
 State 51
 
-   28 sent: FOR LPAR . sent SEMICOLON cond SEMICOLON sent RPAR sent
+   34 sent: RETURN exp . SEMICOLON
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
+
+    SEMICOLON  shift, and go to state 83
+    PLUS       shift, and go to state 76
+    MINUS      shift, and go to state 77
+    PROD       shift, and go to state 78
+    DIV        shift, and go to state 79
+    MOD        shift, and go to state 80
+
+
+State 52
+
+   32 sent: FOR LPAR . sent SEMICOLON cond SEMICOLON sent RPAR sent
 
     LCURLYB  shift, and go to state 16
     IF       shift, and go to state 17
@@ -812,68 +844,68 @@ State 51
     RETURN   shift, and go to state 24
     FOR      shift, and go to state 25
 
-    sent       go to state 82
+    sent       go to state 84
     parte_izq  go to state 27
     var_arr    go to state 28
 
 
-State 52
-
-   29 sent: parte_izq ASSIG . exp SEMICOLON
-
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 83
-
-
 State 53
 
-   43 var_arr: var_arr LBRACKET . exp RBRACKET
+   33 sent: parte_izq ASSIG . exp SEMICOLON
 
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
 
     $default  reduce using rule 21 (signo)
 
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 84
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 85
 
 
 State 54
 
-   22 arreglo: LBRACKET . numero RBRACKET arreglo
+   50 var_arr: var_arr LBRACKET . exp RBRACKET
 
-    PLUS   shift, and go to state 41
-    MINUS  shift, and go to state 42
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
 
     $default  reduce using rule 21 (signo)
 
-    numero  go to state 85
-    signo   go to state 44
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 86
 
 
 State 55
+
+   22 arreglo: LBRACKET . numero RBRACKET arreglo
+
+    PLUS   shift, and go to state 42
+    MINUS  shift, and go to state 43
+
+    $default  reduce using rule 21 (signo)
+
+    numero  go to state 87
+    signo   go to state 45
+
+
+State 56
 
    15 lista: ID arreglo .
 
     $default  reduce using rule 15 (lista)
 
 
-State 56
+State 57
 
     5 decls: tipo $@3 lista SEMICOLON . decls
 
@@ -886,520 +918,534 @@ State 56
 
     $default  reduce using rule 6 (decls)
 
-    decls  go to state 86
+    decls  go to state 88
     tipo   go to state 11
 
 
-State 57
+State 58
 
    14 lista: lista COMMA . ID arreglo
 
-    ID  shift, and go to state 87
+    ID  shift, and go to state 89
 
 
-State 58
+State 59
 
    13 tipo: STRUCT LCURLYB $@4 decls RCURLYB .
 
     $default  reduce using rule 13 (tipo)
 
 
-State 59
-
-   32 sent: LCURLYB sent RCURLYB .
-
-    $default  reduce using rule 32 (sent)
-
-
 State 60
 
-   66 cond: TRUE .
+   36 sent: LCURLYB sents RCURLYB .
 
-    $default  reduce using rule 66 (cond)
+    $default  reduce using rule 36 (sent)
 
 
 State 61
 
-   67 cond: FALSE .
+   25 sents: sents $@5 . sent
 
-    $default  reduce using rule 67 (cond)
+    LCURLYB  shift, and go to state 16
+    IF       shift, and go to state 17
+    WHILE    shift, and go to state 18
+    DO       shift, and go to state 19
+    SWITCH   shift, and go to state 20
+    BREAK    shift, and go to state 21
+    PRINT    shift, and go to state 22
+    ID       shift, and go to state 23
+    RETURN   shift, and go to state 24
+    FOR      shift, and go to state 25
+
+    sent       go to state 90
+    parte_izq  go to state 27
+    var_arr    go to state 28
 
 
 State 62
 
-   63 cond: NOT . cond
+   73 cond: TRUE .
 
-    TRUE      shift, and go to state 60
-    FALSE     shift, and go to state 61
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-    NOT       shift, and go to state 62
-    LPAR      shift, and go to state 63
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 64
-    cond     go to state 88
+    $default  reduce using rule 73 (cond)
 
 
 State 63
 
-   64 cond: LPAR . cond RPAR
+   74 cond: FALSE .
 
-    TRUE      shift, and go to state 60
-    FALSE     shift, and go to state 61
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-    NOT       shift, and go to state 62
-    LPAR      shift, and go to state 63
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 64
-    cond     go to state 89
+    $default  reduce using rule 74 (cond)
 
 
 State 64
 
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
-   65 cond: exp . rel exp
+   70 cond: NOT . cond
 
-    EQ     shift, and go to state 90
-    NEQ    shift, and go to state 91
-    GT     shift, and go to state 92
-    GEQ    shift, and go to state 93
-    LT     shift, and go to state 94
-    LEQ    shift, and go to state 95
-    PLUS   shift, and go to state 74
-    MINUS  shift, and go to state 75
-    PROD   shift, and go to state 76
-    DIV    shift, and go to state 77
-    MOD    shift, and go to state 78
+    TRUE      shift, and go to state 62
+    FALSE     shift, and go to state 63
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+    NOT       shift, and go to state 64
+    LPAR      shift, and go to state 65
 
-    rel  go to state 96
+    $default  reduce using rule 21 (signo)
+
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 66
+    cond     go to state 91
 
 
 State 65
 
-   24 sent: IF LPAR cond . RPAR sent
-   25     | IF LPAR cond . RPAR sent ELSE sent
-   60 cond: cond . OR $@5 cond
-   62     | cond . AND $@6 cond
+   71 cond: LPAR . cond RPAR
 
-    OR    shift, and go to state 97
-    AND   shift, and go to state 98
-    RPAR  shift, and go to state 99
+    TRUE      shift, and go to state 62
+    FALSE     shift, and go to state 63
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+    NOT       shift, and go to state 64
+    LPAR      shift, and go to state 65
+
+    $default  reduce using rule 21 (signo)
+
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 66
+    cond     go to state 92
 
 
 State 66
 
-   26 sent: WHILE LPAR cond . RPAR sent
-   60 cond: cond . OR $@5 cond
-   62     | cond . AND $@6 cond
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
+   72 cond: exp . rel exp
 
-    OR    shift, and go to state 97
-    AND   shift, and go to state 98
-    RPAR  shift, and go to state 100
+    EQ     shift, and go to state 93
+    NEQ    shift, and go to state 94
+    GT     shift, and go to state 95
+    GEQ    shift, and go to state 96
+    LT     shift, and go to state 97
+    LEQ    shift, and go to state 98
+    PLUS   shift, and go to state 76
+    MINUS  shift, and go to state 77
+    PROD   shift, and go to state 78
+    DIV    shift, and go to state 79
+    MOD    shift, and go to state 80
+
+    rel  go to state 99
 
 
 State 67
 
-   27 sent: DO sent WHILE . LPAR cond RPAR SEMICOLON
+   29 sent: IF LPAR cond . RPAR $@6 sent $@7 sentp
+   67 cond: cond . OR $@9 cond
+   69     | cond . AND $@10 cond
 
-    LPAR  shift, and go to state 101
+    OR    shift, and go to state 100
+    AND   shift, and go to state 101
+    RPAR  shift, and go to state 102
 
 
 State 68
 
-   33 sent: SWITCH LPAR exp . RPAR LCURLYB casos RCURLYB
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
+   30 sent: WHILE LPAR cond . RPAR sent
+   67 cond: cond . OR $@9 cond
+   69     | cond . AND $@10 cond
 
-    PLUS   shift, and go to state 74
-    MINUS  shift, and go to state 75
-    PROD   shift, and go to state 76
-    DIV    shift, and go to state 77
-    MOD    shift, and go to state 78
-    RPAR   shift, and go to state 102
+    OR    shift, and go to state 100
+    AND   shift, and go to state 101
+    RPAR  shift, and go to state 103
 
 
 State 69
 
-   54 exp: ID LPAR . params RPAR
+   31 sent: DO sent WHILE . LPAR cond RPAR SEMICOLON
 
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-
-    RPAR      reduce using rule 56 (params)
-    $default  reduce using rule 21 (signo)
-
-    numero       go to state 43
-    signo        go to state 44
-    var_arr      go to state 45
-    exp          go to state 103
-    params       go to state 104
-    lista_param  go to state 105
+    LPAR  shift, and go to state 104
 
 
 State 70
+
+   37 sent: SWITCH LPAR exp . RPAR LCURLYB casos RCURLYB
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
+
+    PLUS   shift, and go to state 76
+    MINUS  shift, and go to state 77
+    PROD   shift, and go to state 78
+    DIV    shift, and go to state 79
+    MOD    shift, and go to state 80
+    RPAR   shift, and go to state 105
+
+
+State 71
+
+   61 exp: ID LPAR . params RPAR
+
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+
+    RPAR      reduce using rule 63 (params)
+    $default  reduce using rule 21 (signo)
+
+    numero       go to state 44
+    signo        go to state 45
+    var_arr      go to state 46
+    exp          go to state 106
+    params       go to state 107
+    lista_param  go to state 108
+
+
+State 72
 
    16 numero: signo INT .
 
     $default  reduce using rule 16 (numero)
 
 
-State 71
+State 73
 
    17 numero: signo DOUBLE .
 
     $default  reduce using rule 17 (numero)
 
 
-State 72
+State 74
 
    18 numero: signo FLOAT .
 
     $default  reduce using rule 18 (numero)
 
 
-State 73
-
-   35 sent: PRINT exp SEMICOLON .
-
-    $default  reduce using rule 35 (sent)
-
-
-State 74
-
-   44 exp: exp PLUS . exp
-
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 106
-
-
 State 75
 
-   45 exp: exp MINUS . exp
+   39 sent: PRINT exp SEMICOLON .
 
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 107
+    $default  reduce using rule 39 (sent)
 
 
 State 76
 
-   46 exp: exp PROD . exp
+   51 exp: exp PLUS . exp
 
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
 
     $default  reduce using rule 21 (signo)
 
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 108
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 109
 
 
 State 77
 
-   47 exp: exp DIV . exp
+   52 exp: exp MINUS . exp
 
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
 
     $default  reduce using rule 21 (signo)
 
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 109
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 110
 
 
 State 78
 
-   48 exp: exp MOD . exp
+   53 exp: exp PROD . exp
 
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
 
     $default  reduce using rule 21 (signo)
 
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 110
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 111
 
 
 State 79
 
-   42 var_arr: ID LBRACKET exp . RBRACKET
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
+   54 exp: exp DIV . exp
 
-    RBRACKET  shift, and go to state 111
-    PLUS      shift, and go to state 74
-    MINUS     shift, and go to state 75
-    PROD      shift, and go to state 76
-    DIV       shift, and go to state 77
-    MOD       shift, and go to state 78
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+
+    $default  reduce using rule 21 (signo)
+
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 112
 
 
 State 80
 
-   41 parte_izq: ID DOT ID .
+   55 exp: exp MOD . exp
 
-    $default  reduce using rule 41 (parte_izq)
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+
+    $default  reduce using rule 21 (signo)
+
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 113
 
 
 State 81
 
-   30 sent: RETURN exp SEMICOLON .
+   49 var_arr: ID LBRACKET exp . RBRACKET
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
 
-    $default  reduce using rule 30 (sent)
+    RBRACKET  shift, and go to state 114
+    PLUS      shift, and go to state 76
+    MINUS     shift, and go to state 77
+    PROD      shift, and go to state 78
+    DIV       shift, and go to state 79
+    MOD       shift, and go to state 80
 
 
 State 82
 
-   28 sent: FOR LPAR sent . SEMICOLON cond SEMICOLON sent RPAR sent
+   48 parte_izq: ID DOT ID .
 
-    SEMICOLON  shift, and go to state 112
+    $default  reduce using rule 48 (parte_izq)
 
 
 State 83
 
-   29 sent: parte_izq ASSIG exp . SEMICOLON
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
+   34 sent: RETURN exp SEMICOLON .
 
-    SEMICOLON  shift, and go to state 113
-    PLUS       shift, and go to state 74
-    MINUS      shift, and go to state 75
-    PROD       shift, and go to state 76
-    DIV        shift, and go to state 77
-    MOD        shift, and go to state 78
+    $default  reduce using rule 34 (sent)
 
 
 State 84
 
-   43 var_arr: var_arr LBRACKET exp . RBRACKET
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
+   32 sent: FOR LPAR sent . SEMICOLON cond SEMICOLON sent RPAR sent
 
-    RBRACKET  shift, and go to state 114
-    PLUS      shift, and go to state 74
-    MINUS     shift, and go to state 75
-    PROD      shift, and go to state 76
-    DIV       shift, and go to state 77
-    MOD       shift, and go to state 78
+    SEMICOLON  shift, and go to state 115
 
 
 State 85
 
-   22 arreglo: LBRACKET numero . RBRACKET arreglo
+   33 sent: parte_izq ASSIG exp . SEMICOLON
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
 
-    RBRACKET  shift, and go to state 115
+    SEMICOLON  shift, and go to state 116
+    PLUS       shift, and go to state 76
+    MINUS      shift, and go to state 77
+    PROD       shift, and go to state 78
+    DIV        shift, and go to state 79
+    MOD        shift, and go to state 80
 
 
 State 86
+
+   50 var_arr: var_arr LBRACKET exp . RBRACKET
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
+
+    RBRACKET  shift, and go to state 117
+    PLUS      shift, and go to state 76
+    MINUS     shift, and go to state 77
+    PROD      shift, and go to state 78
+    DIV       shift, and go to state 79
+    MOD       shift, and go to state 80
+
+
+State 87
+
+   22 arreglo: LBRACKET numero . RBRACKET arreglo
+
+    RBRACKET  shift, and go to state 118
+
+
+State 88
 
     5 decls: tipo $@3 lista SEMICOLON decls .
 
     $default  reduce using rule 5 (decls)
 
 
-State 87
+State 89
 
    14 lista: lista COMMA ID . arreglo
 
-    LBRACKET  shift, and go to state 54
+    LBRACKET  shift, and go to state 55
 
     $default  reduce using rule 23 (arreglo)
 
-    arreglo  go to state 116
-
-
-State 88
-
-   60 cond: cond . OR $@5 cond
-   62     | cond . AND $@6 cond
-   63     | NOT cond .
-
-    $default  reduce using rule 63 (cond)
-
-
-State 89
-
-   60 cond: cond . OR $@5 cond
-   62     | cond . AND $@6 cond
-   64     | LPAR cond . RPAR
-
-    OR    shift, and go to state 97
-    AND   shift, and go to state 98
-    RPAR  shift, and go to state 117
+    arreglo  go to state 119
 
 
 State 90
 
-   73 rel: EQ .
+   25 sents: sents $@5 sent .
 
-    $default  reduce using rule 73 (rel)
+    $default  reduce using rule 25 (sents)
 
 
 State 91
 
-   72 rel: NEQ .
+   67 cond: cond . OR $@9 cond
+   69     | cond . AND $@10 cond
+   70     | NOT cond .
 
-    $default  reduce using rule 72 (rel)
+    $default  reduce using rule 70 (cond)
 
 
 State 92
 
-   69 rel: GT .
+   67 cond: cond . OR $@9 cond
+   69     | cond . AND $@10 cond
+   71     | LPAR cond . RPAR
 
-    $default  reduce using rule 69 (rel)
+    OR    shift, and go to state 100
+    AND   shift, and go to state 101
+    RPAR  shift, and go to state 120
 
 
 State 93
 
-   71 rel: GEQ .
+   80 rel: EQ .
 
-    $default  reduce using rule 71 (rel)
+    $default  reduce using rule 80 (rel)
 
 
 State 94
 
-   68 rel: LT .
+   79 rel: NEQ .
 
-    $default  reduce using rule 68 (rel)
+    $default  reduce using rule 79 (rel)
 
 
 State 95
 
-   70 rel: LEQ .
+   76 rel: GT .
 
-    $default  reduce using rule 70 (rel)
+    $default  reduce using rule 76 (rel)
 
 
 State 96
 
-   65 cond: exp rel . exp
+   78 rel: GEQ .
 
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 118
+    $default  reduce using rule 78 (rel)
 
 
 State 97
 
-   60 cond: cond OR . $@5 cond
+   75 rel: LT .
 
-    $default  reduce using rule 59 ($@5)
-
-    $@5  go to state 119
+    $default  reduce using rule 75 (rel)
 
 
 State 98
 
-   62 cond: cond AND . $@6 cond
+   77 rel: LEQ .
 
-    $default  reduce using rule 61 ($@6)
-
-    $@6  go to state 120
+    $default  reduce using rule 77 (rel)
 
 
 State 99
 
-   24 sent: IF LPAR cond RPAR . sent
-   25     | IF LPAR cond RPAR . sent ELSE sent
+   72 cond: exp rel . exp
 
-    LCURLYB  shift, and go to state 16
-    IF       shift, and go to state 17
-    WHILE    shift, and go to state 18
-    DO       shift, and go to state 19
-    SWITCH   shift, and go to state 20
-    BREAK    shift, and go to state 21
-    PRINT    shift, and go to state 22
-    ID       shift, and go to state 23
-    RETURN   shift, and go to state 24
-    FOR      shift, and go to state 25
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
 
-    sent       go to state 121
-    parte_izq  go to state 27
-    var_arr    go to state 28
+    $default  reduce using rule 21 (signo)
+
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 121
 
 
 State 100
 
-   26 sent: WHILE LPAR cond RPAR . sent
+   67 cond: cond OR . $@9 cond
+
+    $default  reduce using rule 66 ($@9)
+
+    $@9  go to state 122
+
+
+State 101
+
+   69 cond: cond AND . $@10 cond
+
+    $default  reduce using rule 68 ($@10)
+
+    $@10  go to state 123
+
+
+State 102
+
+   29 sent: IF LPAR cond RPAR . $@6 sent $@7 sentp
+
+    $default  reduce using rule 27 ($@6)
+
+    $@6  go to state 124
+
+
+State 103
+
+   30 sent: WHILE LPAR cond RPAR . sent
 
     LCURLYB  shift, and go to state 16
     IF       shift, and go to state 17
@@ -1412,502 +1458,422 @@ State 100
     RETURN   shift, and go to state 24
     FOR      shift, and go to state 25
 
-    sent       go to state 122
+    sent       go to state 125
     parte_izq  go to state 27
     var_arr    go to state 28
 
 
-State 101
+State 104
 
-   27 sent: DO sent WHILE LPAR . cond RPAR SEMICOLON
+   31 sent: DO sent WHILE LPAR . cond RPAR SEMICOLON
 
-    TRUE      shift, and go to state 60
-    FALSE     shift, and go to state 61
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-    NOT       shift, and go to state 62
-    LPAR      shift, and go to state 63
+    TRUE      shift, and go to state 62
+    FALSE     shift, and go to state 63
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+    NOT       shift, and go to state 64
+    LPAR      shift, and go to state 65
 
     $default  reduce using rule 21 (signo)
 
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 64
-    cond     go to state 123
-
-
-State 102
-
-   33 sent: SWITCH LPAR exp RPAR . LCURLYB casos RCURLYB
-
-    LCURLYB  shift, and go to state 124
-
-
-State 103
-
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
-   58 lista_param: exp .
-
-    PLUS   shift, and go to state 74
-    MINUS  shift, and go to state 75
-    PROD   shift, and go to state 76
-    DIV    shift, and go to state 77
-    MOD    shift, and go to state 78
-
-    $default  reduce using rule 58 (lista_param)
-
-
-State 104
-
-   54 exp: ID LPAR params . RPAR
-
-    RPAR  shift, and go to state 125
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 66
+    cond     go to state 126
 
 
 State 105
 
-   55 params: lista_param .
-   57 lista_param: lista_param . COMMA exp
+   37 sent: SWITCH LPAR exp RPAR . LCURLYB casos RCURLYB
 
-    COMMA  shift, and go to state 126
-
-    $default  reduce using rule 55 (params)
+    LCURLYB  shift, and go to state 127
 
 
 State 106
 
-   44 exp: exp . PLUS exp
-   44    | exp PLUS exp .
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
+   65 lista_param: exp .
 
-    PROD  shift, and go to state 76
-    DIV   shift, and go to state 77
-    MOD   shift, and go to state 78
+    PLUS   shift, and go to state 76
+    MINUS  shift, and go to state 77
+    PROD   shift, and go to state 78
+    DIV    shift, and go to state 79
+    MOD    shift, and go to state 80
 
-    $default  reduce using rule 44 (exp)
+    $default  reduce using rule 65 (lista_param)
 
 
 State 107
 
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   45    | exp MINUS exp .
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
+   61 exp: ID LPAR params . RPAR
 
-    PROD  shift, and go to state 76
-    DIV   shift, and go to state 77
-    MOD   shift, and go to state 78
-
-    $default  reduce using rule 45 (exp)
+    RPAR  shift, and go to state 128
 
 
 State 108
 
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   46    | exp PROD exp .
-   47    | exp . DIV exp
-   48    | exp . MOD exp
+   62 params: lista_param .
+   64 lista_param: lista_param . COMMA exp
 
-    $default  reduce using rule 46 (exp)
+    COMMA  shift, and go to state 129
+
+    $default  reduce using rule 62 (params)
 
 
 State 109
 
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   47    | exp DIV exp .
-   48    | exp . MOD exp
+   51 exp: exp . PLUS exp
+   51    | exp PLUS exp .
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
 
-    $default  reduce using rule 47 (exp)
+    PROD  shift, and go to state 78
+    DIV   shift, and go to state 79
+    MOD   shift, and go to state 80
+
+    $default  reduce using rule 51 (exp)
 
 
 State 110
 
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
-   48    | exp MOD exp .
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   52    | exp MINUS exp .
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
 
-    $default  reduce using rule 48 (exp)
+    PROD  shift, and go to state 78
+    DIV   shift, and go to state 79
+    MOD   shift, and go to state 80
+
+    $default  reduce using rule 52 (exp)
 
 
 State 111
 
-   42 var_arr: ID LBRACKET exp RBRACKET .
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   53    | exp PROD exp .
+   54    | exp . DIV exp
+   55    | exp . MOD exp
 
-    $default  reduce using rule 42 (var_arr)
+    $default  reduce using rule 53 (exp)
 
 
 State 112
 
-   28 sent: FOR LPAR sent SEMICOLON . cond SEMICOLON sent RPAR sent
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   54    | exp DIV exp .
+   55    | exp . MOD exp
 
-    TRUE      shift, and go to state 60
-    FALSE     shift, and go to state 61
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-    NOT       shift, and go to state 62
-    LPAR      shift, and go to state 63
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 64
-    cond     go to state 127
+    $default  reduce using rule 54 (exp)
 
 
 State 113
 
-   29 sent: parte_izq ASSIG exp SEMICOLON .
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
+   55    | exp MOD exp .
 
-    $default  reduce using rule 29 (sent)
+    $default  reduce using rule 55 (exp)
 
 
 State 114
 
-   43 var_arr: var_arr LBRACKET exp RBRACKET .
+   49 var_arr: ID LBRACKET exp RBRACKET .
 
-    $default  reduce using rule 43 (var_arr)
+    $default  reduce using rule 49 (var_arr)
 
 
 State 115
 
-   22 arreglo: LBRACKET numero RBRACKET . arreglo
+   32 sent: FOR LPAR sent SEMICOLON . cond SEMICOLON sent RPAR sent
 
-    LBRACKET  shift, and go to state 54
+    TRUE      shift, and go to state 62
+    FALSE     shift, and go to state 63
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+    NOT       shift, and go to state 64
+    LPAR      shift, and go to state 65
 
-    $default  reduce using rule 23 (arreglo)
+    $default  reduce using rule 21 (signo)
 
-    arreglo  go to state 128
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 66
+    cond     go to state 130
 
 
 State 116
+
+   33 sent: parte_izq ASSIG exp SEMICOLON .
+
+    $default  reduce using rule 33 (sent)
+
+
+State 117
+
+   50 var_arr: var_arr LBRACKET exp RBRACKET .
+
+    $default  reduce using rule 50 (var_arr)
+
+
+State 118
+
+   22 arreglo: LBRACKET numero RBRACKET . arreglo
+
+    LBRACKET  shift, and go to state 55
+
+    $default  reduce using rule 23 (arreglo)
+
+    arreglo  go to state 131
+
+
+State 119
 
    14 lista: lista COMMA ID arreglo .
 
     $default  reduce using rule 14 (lista)
 
 
-State 117
-
-   64 cond: LPAR cond RPAR .
-
-    $default  reduce using rule 64 (cond)
-
-
-State 118
-
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
-   65 cond: exp rel exp .
-
-    PLUS   shift, and go to state 74
-    MINUS  shift, and go to state 75
-    PROD   shift, and go to state 76
-    DIV    shift, and go to state 77
-    MOD    shift, and go to state 78
-
-    $default  reduce using rule 65 (cond)
-
-
-State 119
-
-   60 cond: cond OR $@5 . cond
-
-    TRUE      shift, and go to state 60
-    FALSE     shift, and go to state 61
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-    NOT       shift, and go to state 62
-    LPAR      shift, and go to state 63
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 64
-    cond     go to state 129
-
-
 State 120
 
-   62 cond: cond AND $@6 . cond
+   71 cond: LPAR cond RPAR .
 
-    TRUE      shift, and go to state 60
-    FALSE     shift, and go to state 61
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-    NOT       shift, and go to state 62
-    LPAR      shift, and go to state 63
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 64
-    cond     go to state 130
+    $default  reduce using rule 71 (cond)
 
 
 State 121
 
-   24 sent: IF LPAR cond RPAR sent .
-   25     | IF LPAR cond RPAR sent . ELSE sent
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
+   72 cond: exp rel exp .
 
-    ELSE  shift, and go to state 131
+    PLUS   shift, and go to state 76
+    MINUS  shift, and go to state 77
+    PROD   shift, and go to state 78
+    DIV    shift, and go to state 79
+    MOD    shift, and go to state 80
 
-    $default  reduce using rule 24 (sent)
+    $default  reduce using rule 72 (cond)
 
 
 State 122
 
-   26 sent: WHILE LPAR cond RPAR sent .
+   67 cond: cond OR $@9 . cond
 
-    $default  reduce using rule 26 (sent)
+    TRUE      shift, and go to state 62
+    FALSE     shift, and go to state 63
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+    NOT       shift, and go to state 64
+    LPAR      shift, and go to state 65
+
+    $default  reduce using rule 21 (signo)
+
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 66
+    cond     go to state 132
 
 
 State 123
 
-   27 sent: DO sent WHILE LPAR cond . RPAR SEMICOLON
-   60 cond: cond . OR $@5 cond
-   62     | cond . AND $@6 cond
+   69 cond: cond AND $@10 . cond
 
-    OR    shift, and go to state 97
-    AND   shift, and go to state 98
-    RPAR  shift, and go to state 132
+    TRUE      shift, and go to state 62
+    FALSE     shift, and go to state 63
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+    NOT       shift, and go to state 64
+    LPAR      shift, and go to state 65
+
+    $default  reduce using rule 21 (signo)
+
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 66
+    cond     go to state 133
 
 
 State 124
 
-   33 sent: SWITCH LPAR exp RPAR LCURLYB . casos RCURLYB
+   29 sent: IF LPAR cond RPAR $@6 . sent $@7 sentp
 
-    CASE     shift, and go to state 133
-    DEFAULT  shift, and go to state 134
+    LCURLYB  shift, and go to state 16
+    IF       shift, and go to state 17
+    WHILE    shift, and go to state 18
+    DO       shift, and go to state 19
+    SWITCH   shift, and go to state 20
+    BREAK    shift, and go to state 21
+    PRINT    shift, and go to state 22
+    ID       shift, and go to state 23
+    RETURN   shift, and go to state 24
+    FOR      shift, and go to state 25
 
-    $default  reduce using rule 38 (casos)
-
-    casos  go to state 135
+    sent       go to state 134
+    parte_izq  go to state 27
+    var_arr    go to state 28
 
 
 State 125
 
-   54 exp: ID LPAR params RPAR .
+   30 sent: WHILE LPAR cond RPAR sent .
 
-    $default  reduce using rule 54 (exp)
+    $default  reduce using rule 30 (sent)
 
 
 State 126
 
-   57 lista_param: lista_param COMMA . exp
+   31 sent: DO sent WHILE LPAR cond . RPAR SEMICOLON
+   67 cond: cond . OR $@9 cond
+   69     | cond . AND $@10 cond
 
-    ID        shift, and go to state 38
-    CADENA    shift, and go to state 39
-    CARACTER  shift, and go to state 40
-    PLUS      shift, and go to state 41
-    MINUS     shift, and go to state 42
-
-    $default  reduce using rule 21 (signo)
-
-    numero   go to state 43
-    signo    go to state 44
-    var_arr  go to state 45
-    exp      go to state 136
+    OR    shift, and go to state 100
+    AND   shift, and go to state 101
+    RPAR  shift, and go to state 135
 
 
 State 127
 
-   28 sent: FOR LPAR sent SEMICOLON cond . SEMICOLON sent RPAR sent
-   60 cond: cond . OR $@5 cond
-   62     | cond . AND $@6 cond
+   37 sent: SWITCH LPAR exp RPAR LCURLYB . casos RCURLYB
 
-    SEMICOLON  shift, and go to state 137
-    OR         shift, and go to state 97
-    AND        shift, and go to state 98
+    CASE     shift, and go to state 136
+    DEFAULT  shift, and go to state 137
+
+    $default  reduce using rule 45 (casos)
+
+    casos  go to state 138
 
 
 State 128
+
+   61 exp: ID LPAR params RPAR .
+
+    $default  reduce using rule 61 (exp)
+
+
+State 129
+
+   64 lista_param: lista_param COMMA . exp
+
+    ID        shift, and go to state 39
+    CADENA    shift, and go to state 40
+    CARACTER  shift, and go to state 41
+    PLUS      shift, and go to state 42
+    MINUS     shift, and go to state 43
+
+    $default  reduce using rule 21 (signo)
+
+    numero   go to state 44
+    signo    go to state 45
+    var_arr  go to state 46
+    exp      go to state 139
+
+
+State 130
+
+   32 sent: FOR LPAR sent SEMICOLON cond . SEMICOLON sent RPAR sent
+   67 cond: cond . OR $@9 cond
+   69     | cond . AND $@10 cond
+
+    SEMICOLON  shift, and go to state 140
+    OR         shift, and go to state 100
+    AND        shift, and go to state 101
+
+
+State 131
 
    22 arreglo: LBRACKET numero RBRACKET arreglo .
 
     $default  reduce using rule 22 (arreglo)
 
 
-State 129
-
-   60 cond: cond . OR $@5 cond
-   60     | cond OR $@5 cond .
-   62     | cond . AND $@6 cond
-
-    AND  shift, and go to state 98
-
-    $default  reduce using rule 60 (cond)
-
-
-State 130
-
-   60 cond: cond . OR $@5 cond
-   62     | cond . AND $@6 cond
-   62     | cond AND $@6 cond .
-
-    $default  reduce using rule 62 (cond)
-
-
-State 131
-
-   25 sent: IF LPAR cond RPAR sent ELSE . sent
-
-    LCURLYB  shift, and go to state 16
-    IF       shift, and go to state 17
-    WHILE    shift, and go to state 18
-    DO       shift, and go to state 19
-    SWITCH   shift, and go to state 20
-    BREAK    shift, and go to state 21
-    PRINT    shift, and go to state 22
-    ID       shift, and go to state 23
-    RETURN   shift, and go to state 24
-    FOR      shift, and go to state 25
-
-    sent       go to state 138
-    parte_izq  go to state 27
-    var_arr    go to state 28
-
-
 State 132
 
-   27 sent: DO sent WHILE LPAR cond RPAR . SEMICOLON
+   67 cond: cond . OR $@9 cond
+   67     | cond OR $@9 cond .
+   69     | cond . AND $@10 cond
 
-    SEMICOLON  shift, and go to state 139
+    AND  shift, and go to state 101
+
+    $default  reduce using rule 67 (cond)
 
 
 State 133
 
-   36 casos: CASE . numero sent casos
+   67 cond: cond . OR $@9 cond
+   69     | cond . AND $@10 cond
+   69     | cond AND $@10 cond .
 
-    PLUS   shift, and go to state 41
-    MINUS  shift, and go to state 42
-
-    $default  reduce using rule 21 (signo)
-
-    numero  go to state 140
-    signo   go to state 44
+    $default  reduce using rule 69 (cond)
 
 
 State 134
 
-   37 casos: DEFAULT . sent
+   29 sent: IF LPAR cond RPAR $@6 sent . $@7 sentp
 
-    LCURLYB  shift, and go to state 16
-    IF       shift, and go to state 17
-    WHILE    shift, and go to state 18
-    DO       shift, and go to state 19
-    SWITCH   shift, and go to state 20
-    BREAK    shift, and go to state 21
-    PRINT    shift, and go to state 22
-    ID       shift, and go to state 23
-    RETURN   shift, and go to state 24
-    FOR      shift, and go to state 25
+    $default  reduce using rule 28 ($@7)
 
-    sent       go to state 141
-    parte_izq  go to state 27
-    var_arr    go to state 28
+    $@7  go to state 141
 
 
 State 135
 
-   33 sent: SWITCH LPAR exp RPAR LCURLYB casos . RCURLYB
+   31 sent: DO sent WHILE LPAR cond RPAR . SEMICOLON
 
-    RCURLYB  shift, and go to state 142
+    SEMICOLON  shift, and go to state 142
 
 
 State 136
 
-   44 exp: exp . PLUS exp
-   45    | exp . MINUS exp
-   46    | exp . PROD exp
-   47    | exp . DIV exp
-   48    | exp . MOD exp
-   57 lista_param: lista_param COMMA exp .
+   43 casos: CASE . numero sent casos
 
-    PLUS   shift, and go to state 74
-    MINUS  shift, and go to state 75
-    PROD   shift, and go to state 76
-    DIV    shift, and go to state 77
-    MOD    shift, and go to state 78
+    PLUS   shift, and go to state 42
+    MINUS  shift, and go to state 43
 
-    $default  reduce using rule 57 (lista_param)
+    $default  reduce using rule 21 (signo)
+
+    numero  go to state 143
+    signo   go to state 45
 
 
 State 137
 
-   28 sent: FOR LPAR sent SEMICOLON cond SEMICOLON . sent RPAR sent
-
-    LCURLYB  shift, and go to state 16
-    IF       shift, and go to state 17
-    WHILE    shift, and go to state 18
-    DO       shift, and go to state 19
-    SWITCH   shift, and go to state 20
-    BREAK    shift, and go to state 21
-    PRINT    shift, and go to state 22
-    ID       shift, and go to state 23
-    RETURN   shift, and go to state 24
-    FOR      shift, and go to state 25
-
-    sent       go to state 143
-    parte_izq  go to state 27
-    var_arr    go to state 28
-
-
-State 138
-
-   25 sent: IF LPAR cond RPAR sent ELSE sent .
-
-    $default  reduce using rule 25 (sent)
-
-
-State 139
-
-   27 sent: DO sent WHILE LPAR cond RPAR SEMICOLON .
-
-    $default  reduce using rule 27 (sent)
-
-
-State 140
-
-   36 casos: CASE numero . sent casos
+   44 casos: DEFAULT . sent
 
     LCURLYB  shift, and go to state 16
     IF       shift, and go to state 17
@@ -1925,42 +1891,34 @@ State 140
     var_arr    go to state 28
 
 
-State 141
+State 138
 
-   37 casos: DEFAULT sent .
+   37 sent: SWITCH LPAR exp RPAR LCURLYB casos . RCURLYB
 
-    $default  reduce using rule 37 (casos)
-
-
-State 142
-
-   33 sent: SWITCH LPAR exp RPAR LCURLYB casos RCURLYB .
-
-    $default  reduce using rule 33 (sent)
+    RCURLYB  shift, and go to state 145
 
 
-State 143
+State 139
 
-   28 sent: FOR LPAR sent SEMICOLON cond SEMICOLON sent . RPAR sent
+   51 exp: exp . PLUS exp
+   52    | exp . MINUS exp
+   53    | exp . PROD exp
+   54    | exp . DIV exp
+   55    | exp . MOD exp
+   64 lista_param: lista_param COMMA exp .
 
-    RPAR  shift, and go to state 145
+    PLUS   shift, and go to state 76
+    MINUS  shift, and go to state 77
+    PROD   shift, and go to state 78
+    DIV    shift, and go to state 79
+    MOD    shift, and go to state 80
+
+    $default  reduce using rule 64 (lista_param)
 
 
-State 144
+State 140
 
-   36 casos: CASE numero sent . casos
-
-    CASE     shift, and go to state 133
-    DEFAULT  shift, and go to state 134
-
-    $default  reduce using rule 38 (casos)
-
-    casos  go to state 146
-
-
-State 145
-
-   28 sent: FOR LPAR sent SEMICOLON cond SEMICOLON sent RPAR . sent
+   32 sent: FOR LPAR sent SEMICOLON cond SEMICOLON . sent RPAR sent
 
     LCURLYB  shift, and go to state 16
     IF       shift, and go to state 17
@@ -1973,20 +1931,154 @@ State 145
     RETURN   shift, and go to state 24
     FOR      shift, and go to state 25
 
-    sent       go to state 147
+    sent       go to state 146
     parte_izq  go to state 27
     var_arr    go to state 28
 
 
+State 141
+
+   29 sent: IF LPAR cond RPAR $@6 sent $@7 . sentp
+
+    ELSE  shift, and go to state 147
+
+    $default  reduce using rule 40 (sentp)
+
+    sentp  go to state 148
+
+
+State 142
+
+   31 sent: DO sent WHILE LPAR cond RPAR SEMICOLON .
+
+    $default  reduce using rule 31 (sent)
+
+
+State 143
+
+   43 casos: CASE numero . sent casos
+
+    LCURLYB  shift, and go to state 16
+    IF       shift, and go to state 17
+    WHILE    shift, and go to state 18
+    DO       shift, and go to state 19
+    SWITCH   shift, and go to state 20
+    BREAK    shift, and go to state 21
+    PRINT    shift, and go to state 22
+    ID       shift, and go to state 23
+    RETURN   shift, and go to state 24
+    FOR      shift, and go to state 25
+
+    sent       go to state 149
+    parte_izq  go to state 27
+    var_arr    go to state 28
+
+
+State 144
+
+   44 casos: DEFAULT sent .
+
+    $default  reduce using rule 44 (casos)
+
+
+State 145
+
+   37 sent: SWITCH LPAR exp RPAR LCURLYB casos RCURLYB .
+
+    $default  reduce using rule 37 (sent)
+
+
 State 146
 
-   36 casos: CASE numero sent casos .
+   32 sent: FOR LPAR sent SEMICOLON cond SEMICOLON sent . RPAR sent
 
-    $default  reduce using rule 36 (casos)
+    RPAR  shift, and go to state 150
 
 
 State 147
 
-   28 sent: FOR LPAR sent SEMICOLON cond SEMICOLON sent RPAR sent .
+   42 sentp: ELSE . $@8 sent
 
-    $default  reduce using rule 28 (sent)
+    $default  reduce using rule 41 ($@8)
+
+    $@8  go to state 151
+
+
+State 148
+
+   29 sent: IF LPAR cond RPAR $@6 sent $@7 sentp .
+
+    $default  reduce using rule 29 (sent)
+
+
+State 149
+
+   43 casos: CASE numero sent . casos
+
+    CASE     shift, and go to state 136
+    DEFAULT  shift, and go to state 137
+
+    $default  reduce using rule 45 (casos)
+
+    casos  go to state 152
+
+
+State 150
+
+   32 sent: FOR LPAR sent SEMICOLON cond SEMICOLON sent RPAR . sent
+
+    LCURLYB  shift, and go to state 16
+    IF       shift, and go to state 17
+    WHILE    shift, and go to state 18
+    DO       shift, and go to state 19
+    SWITCH   shift, and go to state 20
+    BREAK    shift, and go to state 21
+    PRINT    shift, and go to state 22
+    ID       shift, and go to state 23
+    RETURN   shift, and go to state 24
+    FOR      shift, and go to state 25
+
+    sent       go to state 153
+    parte_izq  go to state 27
+    var_arr    go to state 28
+
+
+State 151
+
+   42 sentp: ELSE $@8 . sent
+
+    LCURLYB  shift, and go to state 16
+    IF       shift, and go to state 17
+    WHILE    shift, and go to state 18
+    DO       shift, and go to state 19
+    SWITCH   shift, and go to state 20
+    BREAK    shift, and go to state 21
+    PRINT    shift, and go to state 22
+    ID       shift, and go to state 23
+    RETURN   shift, and go to state 24
+    FOR      shift, and go to state 25
+
+    sent       go to state 154
+    parte_izq  go to state 27
+    var_arr    go to state 28
+
+
+State 152
+
+   43 casos: CASE numero sent casos .
+
+    $default  reduce using rule 43 (casos)
+
+
+State 153
+
+   32 sent: FOR LPAR sent SEMICOLON cond SEMICOLON sent RPAR sent .
+
+    $default  reduce using rule 32 (sent)
+
+
+State 154
+
+   42 sentp: ELSE $@8 sent .
+
+    $default  reduce using rule 42 (sentp)

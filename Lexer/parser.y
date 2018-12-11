@@ -53,8 +53,8 @@
 %right NOT
 %left LBRACKET RBRACKET
 %left LPAR RPAR  
-%nonassoc "then"
-%nonassoc ELSE
+%left IFX
+%left ELSE
 
 %start prog
 
@@ -125,18 +125,22 @@ sents:
 ;
 
 sent:
-	IF LPAR cond RPAR sent 				 %prec "then"
-    | IF LPAR cond RPAR sent ELSE sent 
+	IF LPAR cond RPAR sent sentp
     | WHILE LPAR cond RPAR sent 
     | DO sent WHILE LPAR cond RPAR SEMICOLON 
     | FOR LPAR sent SEMICOLON cond SEMICOLON sent RPAR sent  
 	| parte_izq ASSIG exp SEMICOLON 
 	| RETURN exp SEMICOLON 
 	| RETURN SEMICOLON 
-	| LCURLYB sent RCURLYB  
+	| LCURLYB sents RCURLYB  
 	| SWITCH LPAR exp RPAR LCURLYB casos RCURLYB 
 	| BREAK SEMICOLON  
 	| PRINT exp SEMICOLON 
+;
+
+sentp:
+	 %empty %prec IFX
+	 | ELSE sent
 ;
 
 casos:

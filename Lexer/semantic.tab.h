@@ -95,7 +95,8 @@ extern int yydebug;
     MOD = 305,
     NOT = 306,
     LPAR = 307,
-    RPAR = 308
+    RPAR = 308,
+    IFX = 309
   };
 #endif
 
@@ -129,7 +130,7 @@ union YYSTYPE
     } siguientesp;
     int rel;
 
-#line 133 "semantic.tab.h" /* yacc.c:1909  */
+#line 134 "semantic.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

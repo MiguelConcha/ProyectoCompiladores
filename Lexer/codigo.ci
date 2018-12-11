@@ -1,1 +1,4 @@
-v.x = 5
+goto L0
+L0:z = 5
+goto I1
+z:

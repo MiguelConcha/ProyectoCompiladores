@@ -7,4 +7,5 @@ struct {
 		} w;
 	} kk;
 } v;
-v.x = 5;
+int z;
+if (true) z=5; else return;
