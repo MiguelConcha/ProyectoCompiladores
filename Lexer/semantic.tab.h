@@ -105,7 +105,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 75 "semantic.y" /* yacc.c:1909  */
+#line 78 "semantic.y" /* yacc.c:1909  */
 
 	struct {
 		int cantidad;
@@ -131,8 +131,13 @@ union YYSTYPE
     } siguientesp;
     int rel;
 	char char_signo[1];
+	struct {
+		int p;
+		int lista_tipos[100];
+		int count;
+	} parrams;
 
-#line 136 "semantic.tab.h" /* yacc.c:1909  */
+#line 141 "semantic.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

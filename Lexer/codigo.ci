@@ -1,2 +1,8 @@
-main:p = 1
+suma:t0 = a + b
+y = t0
 L2:goto L3
+main:param d
+param c
+t1 = call suma, 2
+d = t1
+L6:goto L7

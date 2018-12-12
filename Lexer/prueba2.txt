@@ -1,3 +1,11 @@
+func int suma(int a, int b) {
+	int y;
+	y = a + b;
+}
+
 func void main(int arg[], int f[][][]){
-	p=1;
+	int c;
+	int d;
+	char e;
+	d = suma(d, e);
 }

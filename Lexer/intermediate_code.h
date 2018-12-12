@@ -16,6 +16,8 @@
 #define MODULO 13
 #define LABEL 14
 #define ASSIGNATION 15
+#define PARAM 69
+#define CALL 420
 #define MAX_CODE 1000
     
 typedef struct _cuadrupla{

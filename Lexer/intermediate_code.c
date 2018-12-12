@@ -82,6 +82,14 @@ void print_code(ic* code){
                 fprintf(CODIGO, "%s = %s\n", temporal.res, temporal.op1);
                 printf("%s = %s\n", temporal.res, temporal.op1);
                 break;
+            case PARAM:
+                fprintf(CODIGO, "param %s\n", temporal.res);
+                printf("param %s\n", temporal.res);
+                break;
+            case CALL:
+                fprintf(CODIGO, "%s = call %s, %s\n", temporal.res, temporal.op1, temporal.op2);
+                printf("%s = call %s, %s\n", temporal.res, temporal.op1, temporal.op2);
+                break;
         }        
     }
     fclose(CODIGO);

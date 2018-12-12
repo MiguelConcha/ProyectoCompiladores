@@ -70,6 +70,9 @@
 	char *newLabel();
 	char *newIndex();
 
+	/* Para funciones */
+	void verifica_call(char[], int[], int);
+
 %}
 
 %union {
@@ -97,6 +100,11 @@
     } siguientesp;
     int rel;
 	char char_signo[1];
+	struct {
+		int p;
+		int lista_tipos[100];
+		int count;
+	} parrams;
 }
 
 
@@ -151,6 +159,8 @@
 %type<cant> decls
 %type<cant> lista
 %type<expresion> exp
+%type<parrams> lista_param
+%type<parrams> params
 %type<vararr> var_arr
 %type<rel> rel
 %type<booleanos> cond
@@ -650,17 +660,55 @@ exp:
    | CADENA { $$ = envolver_cadena($1); printf("E -> CADENA\n"); }
    | numero { $$ = get_numero($1); printf("E->numero\n"); printf("%s\n",$1.val); }
    | CARACTER { $$ = envolver_caracter($1); printf("E -> CARACTER\n"); }
-   | ID LPAR params RPAR {}
+   | ID LPAR params RPAR {
+   		verifica_call($1, $3.lista_tipos, $3.count);	
+		char temp[32];
+		strcpy(temp, newTemp());
+		cuadrupla c;
+		c.op = CALL;
+		strcpy(c.op1, $1);
+		sprintf(c.op2, "%d", $3.count);
+		strcpy(c.res, temp);
+		insert_cuad(&codigo_intermedio, c);                    
+		strcpy($$.dir, temp);
+   }
 ;
 
 params:
-	  lista_param 
-	  | %empty 
+	  lista_param {
+	  		$$.p = $1.p;
+			int i;
+			for (i = 0; i < $1.count; i++) {
+				$$.lista_tipos[i] = $1.lista_tipos[i];
+			}
+			$$.count = $1.count;
+	  }
+	  | %empty { $$.p = 0; $$.count = 0; }
 ;
 
 lista_param:
-		   lista_param COMMA exp  
-   		   | exp 
+		   lista_param COMMA exp {
+				cuadrupla c;
+				c.op = PARAM;
+				strcpy(c.op1, "");
+				strcpy(c.op2, "");
+				strcpy(c.res, $3.dir);
+				insert_cuad(&codigo_intermedio, c);                    
+				$$.p = $1.p + 1;
+				$$.lista_tipos[$1.count] = $3.type;
+				$$.count = $1.count + 1;
+		   }
+   		   | exp {
+				cuadrupla c;
+				c.op = PARAM;
+				strcpy(c.op1, "");
+				strcpy(c.op2, "");
+				strcpy(c.res, $1.dir);
+				insert_cuad(&codigo_intermedio, c);                    
+				$$.p = 1;
+				$$.lista_tipos[0] = $1.type;
+				$$.count = 1;
+		   }
 ;
 
 cond:
@@ -912,6 +960,29 @@ int get_tipo_tablas(char *id) {
 	return tipo;
 }
 
+void verifica_call(char id[], int params[], int params_count) {
+	int renglon = search(masterchef->st, id);
+	if (renglon == -1) {
+		yyerror("La funcion que quieres llamra no ha sido declarado\n");
+		exit(1);
+	}
+	if (masterchef->st->symbols[renglon].num_args != params_count) {
+		char error[1000];
+		strcpy(error, "El número de argumentos con la que fue llamada la función es incorrecto: ");
+		yyerror2(error, id);
+		exit(1);
+	}
+	for (int j = 0; j < params_count; j++) {
+		if (masterchef->st->symbols[renglon].args[j] != params[j]) {
+			char error[1000];
+			strcpy(error, "Los tipos de los argumentos que ingresaste no son correcto con la funcion: ");
+			yyerror2(error, id);
+			exit(1);
+		}
+	}
+	
+}
+
 exp asignacion(char *id, char *id2, exp e, int trecibido){
 	exp e1;
 	printf("asignaciooon\n");
@@ -1112,6 +1183,8 @@ char *reducir(char *dir, int t1, int t2){
         printf("perdida de información se esta asignando un double a un float\n");
         return t;
     }            
+	printf("Asignacion inconsistente krnal\n");
+	exit(1);
 	//faltan casos inconsistentes chars vs numeros vs arrays
 }
 
