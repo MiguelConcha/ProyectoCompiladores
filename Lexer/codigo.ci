@@ -5,4 +5,10 @@ main:param d
 param c
 t1 = call suma, 2
 d = t1
-L6:goto L7
+L7:goto L6
+:t2 = 5 < 3
+if t2 goto I4
+goto I5
+goto L8
+if  goto I4
+L12:goto L13

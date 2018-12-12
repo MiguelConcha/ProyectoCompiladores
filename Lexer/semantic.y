@@ -25,11 +25,13 @@
 	int current_dim;
 	int current_arr_type;
 	int current_dim_arr;
+	int current_function_type;
 
 	/* Varaibles para contar las temporales, etiquetas e indices */
 	int label;
 	int temp;
 	int indice;
+	int breakeablecitos = 0;
 
 	/* Variable para el unico atributo heredado de sentencia prima*/
 	labels lfalses;
@@ -293,6 +295,7 @@ funcs:
 		create_table(ntab->st);
 		create_type_table(ntab->tt);
 		stack_masterchefs = mete(stack_masterchefs, ntab);
+		current_function_type = $2.type;
 	 }
 	 LPAR args RPAR {
 		cuadrupla c;
@@ -476,7 +479,7 @@ sent:
             printf("S->if(B)S else S\n");
         }
     }
-    | WHILE LPAR cond RPAR sent {
+    | WHILE  LPAR cond RPAR { breakeablecitos += 1; } sent {
         char label[32], label2[32], temp[32];
         strcpy(label, newIndex());                
         strcpy(label2, newIndex());         
@@ -491,28 +494,30 @@ sent:
         backpatch(&$3.trues, label, &codigo_intermedio);
         backpatch(&$3.falses, label2, &codigo_intermedio);
         printf("S->while(B)S\n");
+		breakeablecitos -= 1;
     }
-    | DO sent WHILE LPAR cond RPAR SEMICOLON {
+    | DO { breakeablecitos += 1; } sent WHILE LPAR cond RPAR SEMICOLON {
 		char label[32], label2[32], temp[32];
         strcpy(label, newIndex());                
 
 		//Ejecucion incondicional de la sentencia
-		backpatch(&$5.trues, label, &codigo_intermedio);
+		backpatch(&$6.trues, label, &codigo_intermedio);
 
         strcpy(label2, newIndex());         
         strcpy(temp, newTemp());
 		printf("tempito %s /n", temp);
-        $$ = $5.falses;
+        $$ = $6.falses;
         cuadrupla c1;
         c1.op = IFF;
         strcpy(c1.op2, "GOTO");
         strcpy(c1.res, label);                
         insert_cuad(&codigo_intermedio, c1);
-        backpatch(&$5.trues, label, &codigo_intermedio);
-        backpatch(&$5.falses, label2, &codigo_intermedio);
+        backpatch(&$6.trues, label, &codigo_intermedio);
+        backpatch(&$6.falses, label2, &codigo_intermedio);
         printf("S->do S while(B)\n");
+		breakeablecitos -= 1;
 	}
-    | FOR LPAR assign SEMICOLON cond SEMICOLON assign RPAR sent {
+    | FOR LPAR assign SEMICOLON cond SEMICOLON assign RPAR { breakeablecitos += 1; } sent {
 		meter_assign($3.arr_codigo, $3.count_codigo);
         char label[32], label2[32], temp[32];
         strcpy(label, newIndex());                
@@ -529,10 +534,30 @@ sent:
         backpatch(&$5.falses, label2, &codigo_intermedio);
 		meter_assign($7.arr_codigo, $7.count_codigo);
         printf("S->for(ass; cond; ass) sent\n");
+		breakeablecitos -= 1;
     }
 	| assign SEMICOLON { meter_assign($1.arr_codigo, $1.count_codigo); }
-	| RETURN exp SEMICOLON
-	| RETURN SEMICOLON 
+	| RETURN exp SEMICOLON {
+			if($2.type != current_function_type) {
+				yyerror("Tipo de retorno distinto al tipo de la funcion \n");
+				exit(1);
+			}
+			cuadrupla c1;
+			c1.op = GOTO;
+			char label1[32];
+			strcpy(label1, newLabel());
+			strcpy(c1.op1, "");
+			strcpy(c1.op2, "");
+			strcpy(c1.res, label1);
+			insert_cuad(&codigo_intermedio, c1);
+	
+	}
+	| RETURN SEMICOLON {
+			if(4 != current_function_type) {
+				yyerror("Tipo de retorno void distinto al tipo de la funcion \n");
+				exit(1);
+			}
+	  }
 	| LCURLYB sents RCURLYB {
         char label[32];
         $$ = $2;                
@@ -541,7 +566,20 @@ sent:
         printf("S->{SS}\n");
     }  
 	| SWITCH LPAR exp RPAR LCURLYB casos RCURLYB 
-	| BREAK SEMICOLON  
+	| BREAK SEMICOLON { if(breakeablecitos < 1) {
+							yyerror("El break debe estar dentro de un ciclo \n");
+							exit(1);
+			     		}
+						cuadrupla c1;
+						c1.op = GOTO;
+						char label1[32];
+						strcpy(label1, newLabel());
+						strcpy(c1.op1, "");
+						strcpy(c1.op2, "");
+						strcpy(c1.res, label1);
+						insert_cuad(&codigo_intermedio, c1);
+
+	}
 	| PRINT exp SEMICOLON {
         char i[32];
         strcpy(i, newIndex());

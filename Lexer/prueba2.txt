@@ -3,9 +3,11 @@ func int suma(int a, int b) {
 	y = a + b;
 }
 
-func void main(int arg[], int f[][][]){
+func int main(int arg[], int f[][][]){
 	int c;
 	int d;
 	char e;
-	d = suma(d, e);
+	d = suma(d, c);
+	return d;
+	while(5<3){ break; }
 }

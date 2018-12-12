@@ -105,7 +105,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 78 "semantic.y" /* yacc.c:1909  */
+#line 80 "semantic.y" /* yacc.c:1909  */
 
 	struct {
 		int cantidad;
