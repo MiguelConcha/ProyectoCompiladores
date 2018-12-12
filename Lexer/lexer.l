@@ -1,13 +1,27 @@
 %{
-	#include <stdio.h>
-	#include <stdlib.h>
-	#include "attributes.h"
-	#include "semantic.tab.h"
-	void lexical_error(int, int, char);
-	void increment(char *);
-	int col = 1;
+/* 
+ * Archivo: lexer.l
+ * Autores: Concha Vázquez Miguel
+ * 			Flores Martínez Andrés
+ * 			Gladín García Ángel Iván
+ *  		Sánchez Pérez Pedro Juan Salvador
+ *			Vázquez Salcedor Eduardo Eder
+ * 			
+ * Creado el 14 de diciembre de 2018.
+ */
+#include <stdio.h>
+#include <stdlib.h>
+#include "attributes.h"
+#include "semantic.tab.h"
+void lexical_error(int, int, char);
+void increment(char *);
+int col = 1;
 %}
 
+/* Declaración de macros. 
+   Para el manejo de ASCII, especificamos directamente
+   el rango requerido en los casos en que aplicaba
+   de los valores hexadecimales aceptados. */
 TP	:
 n1  [0-9]+\.[0-9]*
 n2	\.[0-9]+
@@ -19,17 +33,22 @@ float	{double}[Ff]
 cadena \"[\x00-\x21\x23-\x7F]*\" 
 caracter '[\x00-\x26\x28-\x7F]' 
  
+/* Indicando que lea solamente un archivo de entrada y lleve 
+   cuenta de las líneas en este. */
 %option noyywrap
 %option yylineno
 
+/* Estado exclusivo para manejar los comentarios. */
 %x comentario
 
 %%
 
 "/*"					{ BEGIN(comentario); }
-<comentario>[^"*/"]*	{ }
-<comentario>"*/"		{ BEGIN(INITIAL); } 
-<comentario><<EOF>>		{ printf("%s\n", "Error léxico: faltó cerrar el comentario."); exit(1); }
+<comentario>[^"*/"]*	{ increment(yytext); }
+<comentario>"*/"		{ increment(yytext); 
+                          BEGIN(INITIAL); } 
+<comentario><<EOF>>		{ printf("%s\n", "Error léxico: faltó cerrar el comentario.");
+                          exit(1); }
 
 int						{ increment(yytext); return INTTYPE; }
 float					{ increment(yytext); return FLOATTYPE; }
@@ -105,14 +124,43 @@ return					{ increment(yytext); return RETURN; }
 
 %%
 
+/**
+ * Incrementa el contador actual de la columna para poder
+ * imprimir correctamente la ubicación exacta del error léxico 
+ * encontrado cuando sea el caso.
+ * 
+ * Autores: Concha Vázquez Miguel
+ * 			Flores Martínez Andrés
+ * 			Gladín García Ángel Iván
+ *  		Sánchez Pérez Pedro Juan Salvador
+ *			Vázquez Salcedor Eduardo Eder
+ * 
+ * Creada el 2 de diciembre de 2018.
+ */
 void increment(char *cadena) {
 		int size = (int)strlen(cadena);
 		col += size;
 }
 
+/**
+ * Especificación de la función para errores léxicos que imprime
+ * dentro de un archivo los errores léxicos cometidos, además
+ * de indicar en consola y en el archivo la línea, columna y nCarácter
+ * especificó que propició el error.
+ * 
+ * Autores: Concha Vázquez Miguel
+ * 			Flores Martínez Andrés
+ * 			Gladín García Ángel Iván
+ *  		Sánchez Pérez Pedro Juan Salvador
+ *			Vázquez Salcedor Eduardo Eder
+ * 
+ * Creada el 2 de diciembre de 2018.
+ */
 void lexical_error(int line, int column, char c) {
+	// Abriendo el archivo con permiso de escritura en donde se escribirán los errores léxicos.
 	FILE *e = fopen("lexical_errors.txt", "w");
 	printf("Ocurrió un error léxico: \nLínea: %d\nColumna: %d\nCarácter que lo ocasiona: %c\n\n", line, column, c);
-	fprintf(e,  "Ocurrió un error léxico: \nLínea: %d\nColumna: %d\nCarácter que lo ocasiona: %c\n\n", line, column, c);
+	fprintf(e, "Ocurrió un error léxico: \nLínea: %d\nColumna: %d\nCarácter que lo ocasiona: %c\n\n", line, column, c);
 	fclose(e);
 }
+
