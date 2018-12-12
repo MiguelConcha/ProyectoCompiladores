@@ -1,11 +1,5 @@
-int a;
-func int myf(char c, double fa){
-	int z;
-	double d;
-	return;
-}
 func void main(int arg[], char b[][][]){
 	int z;
 	float b;
-	return 0;
+	z=1;
 }

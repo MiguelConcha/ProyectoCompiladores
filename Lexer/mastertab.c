@@ -52,8 +52,10 @@ int get_dir(symtab *st, char* id){
 int get_type(symtab* st, char *id){
     int i;
     for(i=0; i< st->count; i++){
-        if(strcmp(st->symbols[i].id,id)==0)
+        if(strcmp(st->symbols[i].id,id)==0) {
             return st->symbols[i].type;
+			printf("lo encontre\n");
+		}
     }
 }
 

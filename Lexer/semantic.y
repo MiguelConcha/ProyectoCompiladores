@@ -491,6 +491,7 @@ assign:
                 char i[32];
                 strcpy(i, newIndex());
                 $$ = create_list(i);
+                printf("%s, %s, %d\n", $1.id1, $1.id2,$1.type);
                 exp e = asignacion($1.id1, $1.id2, $3, $1.type); 
                 printf("S->parte_izq = E;\n");
 				int iterador;
@@ -837,6 +838,23 @@ exp modulo(exp e1, exp e2){
     return e;    
 }
 
+int get_tipo_tablas(char *id) {
+	int tipo;
+	int busqueda = search(stack_masterchefs->tabla->st, id);
+	if (busqueda == -1) {
+		busqueda = search(masterchef->st, id);
+		if (busqueda == -1) {
+			yyerror("El identificador para la variable no fue declarada antes.\n");
+			exit(1);
+		} else {	
+			tipo = get_type(masterchef->st, id);
+		}
+	} else {
+		tipo = get_type(stack_masterchefs->tabla->st, id);
+	}
+	return tipo;
+}
+
 exp asignacion(char *id, char *id2, exp e, int trecibido){
 	exp e1;
 	e1.count_codigo = 0;
@@ -844,7 +862,7 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
 		int tipo;
 		int es_estruct = 0;
 		if(strcmp(id2, "") == 0) {
-			tipo = get_type(masterchef->st, id);
+			tipo = get_tipo_tablas(id);
 		} else {
 			es_estruct = 1;
 			int renglon = search(masterchef->st, id);
@@ -855,12 +873,15 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
 			typetab tabla_tipos_actual= (*masterchef->tt);
 			int tiene_struct = tabla_tipos_actual.trs[masterchef->st->symbols[renglon].type].base.renglon;
 			if(tiene_struct == -2) {
-				symtab *st_struct = tabla_tipos_actual.trs[masterchef->st->symbols[renglon].type].base.smt->st;
-
+				symtab *st_struct = tabla_tipos_actual.trs[stack_masterchefs->tabla->st->symbols[renglon].type].base.smt->st;
 				int renglon2 = search(st_struct, id2);
 				if (renglon2 == -1) {
-					yyerror("El identificador no fue declarado\n");
-					exit(1);
+					st_struct = tabla_tipos_actual.trs[masterchef->st->symbols[renglon].type].base.smt->st;
+					renglon2 = search(st_struct, id2);
+					if(renglon2 == -1) {
+						yyerror("El struct no fue declarado\n");
+						exit(1);
+					}
 				}
 				tipo = get_type(st_struct, id2);
 			} else {
@@ -870,6 +891,7 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
 		}
 
 		if( tipo != -1){        
+			printf("djekjde");
 			e1.type = e.type;
 			strcpy(e1.dir, id);
 			cuadrupla c;
@@ -937,11 +959,17 @@ exp envolver_varr(varr arreglito) {
 
 exp identificador(char *id){
     exp e;
-    if(search(masterchef->st, id)!=-1){
-        e.type = get_type(masterchef->st, id);
+    if(search(stack_masterchefs->tabla->st, id) !=-1){
+        e.type = get_type(stack_masterchefs->tabla->st, id);
         strcpy(e.dir, id);
     }else{
-        yyerror("Error semantico: el identificador no existe");
+    	if(search(masterchef->st, id) !=-1){
+         	e.type = get_type(masterchef->st, id);
+        	strcpy(e.dir, id);
+        } else {
+        	yyerror("Error semantico: el identificador no existe");
+    		exit(1);
+    	}
     }
     return e;
 }
