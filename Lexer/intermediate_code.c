@@ -1,11 +1,44 @@
+/* 
+ * Archivo: intermediate_code.c
+ * Authors: Concha Vázquez Miguel
+ * 			Flores Martínez Andrés
+ * 			Gladín García Ángel Iván
+ *  		Sánchez Pérez Pedro Juan Salvador
+ *			Vázquez Salcedor Eduardo Eder
+ * 			
+ * Creado el 6 de diciembre de 2018.
+ */
+
 #include "intermediate_code.h"
 #include <stdio.h>
 
+/**
+ * Asignamos el count de la tabla de cuadruplas a cero para que se
+ * empiecen a insertar las cuadruplas desde esta posición.
+ * 
+ * Autores: Concha Vázquez Miguel
+ * 			Flores Martínez Andrés
+ * 			Gladín García Ángel Iván
+ *  		Sánchez Pérez Pedro Juan Salvador
+ *			Vázquez Salcedor Eduardo Eder
+ * 
+ * Creada el 6 de diciembre de 2018.
+ */
 void create_code(ic* code){
     code->count= 0;
 }
 
-
+/**
+ * Insertamos una cuadrupla a la tabla de cuadruplas que ha sido enviada.
+ * 
+ * Autores: Concha Vázquez Miguel
+ * 			Flores Martínez Andrés
+ * 			Gladín García Ángel Iván
+ *  		Sánchez Pérez Pedro Juan Salvador
+ *			Vázquez Salcedor Eduardo Eder
+ * 
+ * Creada el 6 de diciembre de 2018.
+ */
 int insert_cuad(ic* code, cuadrupla c){
     if(code->count<MAX_CODE){
         code->c[code->count++] = c;
@@ -15,6 +48,20 @@ int insert_cuad(ic* code, cuadrupla c){
 }
 
 
+/**
+ * Imprimimos la tabla de cuadruplas.
+ * Para imprimirlo de manera más entendible hacemos un mapeo de las operaciones
+ * con su representación en cadena y mostrar de manera correcta dependiendo de
+ * la operación.
+ * 
+ * Autores: Concha Vázquez Miguel
+ * 			Flores Martínez Andrés
+ * 			Gladín García Ángel Iván
+ *  		Sánchez Pérez Pedro Juan Salvador
+ *			Vázquez Salcedor Eduardo Eder
+ * 
+ * Creada el 6 de diciembre de 2018.
+ */
 void print_code(ic* code){
     FILE * CODIGO;
     CODIGO = fopen("codigo.ci", "w");
