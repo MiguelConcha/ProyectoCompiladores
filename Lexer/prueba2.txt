@@ -1,3 +1,11 @@
-int i;
-int x;
-for (i=4; i<3; i = i+1) x = 3;
+int a;
+func int myf(char c, double fa){
+	int z;
+	double d;
+	return;
+}
+func void main(int arg[], char b[][][]){
+	int z;
+	float b;
+	return 0;
+}

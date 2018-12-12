@@ -115,6 +115,7 @@ union YYSTYPE
     cadena cad;    
     caracter car;    
     arreglo arr;    
+	argumentos argu;
     char id[32];
 	pii pi;	
     exp expresion;
@@ -131,7 +132,7 @@ union YYSTYPE
     int rel;
 	char char_signo[1];
 
-#line 135 "semantic.tab.h" /* yacc.c:1909  */
+#line 136 "semantic.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

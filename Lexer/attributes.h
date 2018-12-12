@@ -9,6 +9,10 @@ typedef struct _type{
 	int bytes;
 } type;
 
+typedef struct _args{
+	int num;
+	int lista_args[100];
+} argumentos;
 
 typedef struct _pii{
 	char id1[32];

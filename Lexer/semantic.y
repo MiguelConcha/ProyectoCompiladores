@@ -81,6 +81,7 @@
     cadena cad;    
     caracter car;    
     arreglo arr;    
+	argumentos argu;
     char id[32];
 	pii pi;	
     exp expresion;
@@ -157,6 +158,7 @@
 %type<siguientesp> sentp
 %type<pi> parte_izq
 %type<char_signo> signo
+%type<argu> args lista_args
 
 %start prog
 
@@ -164,23 +166,13 @@
 
 prog:
 	{ init(); } decls 
-	{ print_type_table(masterchef->tt); print_table(masterchef->st); }
-
-	sent
+	funcs	
     {
-        printf("%s\n", "Al final de sent");
-        cuadrupla c;
-        char label[32];
-        c.op = LABEL;
-        strcpy(c.op1, "");
-        strcpy(c.op2, "");
-        strcpy(c.res, get_first(&$4));
-        insert_cuad(&codigo_intermedio, c);                
-        strcpy(label, newLabel());                                                
-        backpatch(&$4, label, &codigo_intermedio);
-        printf("P -> D SS\n");finish();
+	 	print_type_table(masterchef->tt);
+		print_table(masterchef->st); 
+        printf("P -> D funcs\n"); /*finish()*/
+		finish(); 
     }
- /*funcs*/ { finish(); }
 ;
 
 decls:
@@ -284,18 +276,76 @@ arreglo:
 ;
 
 funcs:
-	 FUNC tipo ID LPAR args RPAR LCURLYB decls sents RCURLYB funcs  
+	 FUNC tipo ID LPAR args RPAR {
+	 	sym s;
+		strcpy(s.id, $3);
+		s.type = $2.type;
+		s.dir = stack_masterchefs->tabla->tt->count;
+		s.var = 1;
+		for(int j = 0; j < $5.num; j++){
+			s.args[j] = $5.lista_args[j];
+		}
+		s.num_args = $5.num;
+		insert(stack_masterchefs->tabla->st, s);
+
+		struct mastertab* ntab = (struct mastertab *) malloc(sizeof(struct mastertab));
+		ntab->tt = (typetab *) malloc(sizeof(typetab));
+		ntab->st= (symtab *) malloc(sizeof(symtab));
+		create_table(ntab->st);
+		create_type_table(ntab->tt);
+		stack_masterchefs = mete(stack_masterchefs, ntab);
+
+	 }
+	 LCURLYB decls sents {
+        cuadrupla c;
+        char label[32];
+        c.op = LABEL;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, get_first(&$10));
+        insert_cuad(&codigo_intermedio, c);                
+        strcpy(label, newLabel());                                                
+        backpatch(&$10, label, &codigo_intermedio);
+	 }
+	 RCURLYB {
+		struct mastertab* sacada;// = (struct mastertab *) malloc(sizeof(struct mastertab));
+		sacada = tope(stack_masterchefs); 
+		stack_masterchefs = saca(stack_masterchefs);
+
+		typerow renglon;
+		renglon.type = 7;
+		renglon.tam = $9.cantidad;
+		renglon.base.renglon = -2;
+		renglon.base.smt = sacada;
+		insert_type_table(stack_masterchefs->tabla->tt, renglon);
+	  	//$$.type = stack_masterchefs->tabla->tt->count-1; 
+		//$$.bytes = $4.cantidad; 
+	 } funcs 
 	 | %empty 
 ;
 
 args:
-	lista_args  
-	| %empty 
+	lista_args { $$.num = $1.num; 
+				 for(int i = 0; i < $1.num; i++){
+					$$.lista_args[i] = $1.lista_args[i];
+				 }
+			   }
+	| %empty { $$.num = 0; }
 ;
 
 lista_args:
-		  lista_args COMMA tipo ID parte_arr  
-		  | tipo ID parte_arr 
+		  lista_args COMMA tipo ID parte_arr  {
+		  		$$.num = 1 + $1.num;
+				 for(int i = 0; i < $1.num; i++){
+					$$.lista_args[i] = $1.lista_args[i];
+				 }
+				 //FALTA CHECAR BIEN EL TIPO PARA CASOS MULTIDIMENSIONALES
+				 $$.lista_args[$$.num-1] = $3.type;
+		  } 
+		  | tipo ID parte_arr {
+			     $$.num = 1;
+				 $$.lista_args[0] = $1.type;
+		  }
 ;
 
 parte_arr:
@@ -378,7 +428,26 @@ sent:
         backpatch(&$3.falses, label2, &codigo_intermedio);
         printf("S->while(B)S\n");
     }
-    | DO sent WHILE LPAR cond RPAR SEMICOLON 
+    | DO sent WHILE LPAR cond RPAR SEMICOLON {
+		char label[32], label2[32], temp[32];
+        strcpy(label, newIndex());                
+
+		//Ejecucion incondicional de la sentencia
+		backpatch(&$5.trues, label, &codigo_intermedio);
+
+        strcpy(label2, newIndex());         
+        strcpy(temp, newTemp());
+		printf("tempito %s /n", temp);
+        $$ = $5.falses;
+        cuadrupla c1;
+        c1.op = IFF;
+        strcpy(c1.op2, "GOTO");
+        strcpy(c1.res, label);                
+        insert_cuad(&codigo_intermedio, c1);
+        backpatch(&$5.trues, label, &codigo_intermedio);
+        backpatch(&$5.falses, label2, &codigo_intermedio);
+        printf("S->do S while(B)\n");
+	}
     | FOR LPAR assign SEMICOLON cond SEMICOLON assign RPAR sent {
 		meter_assign($3.arr_codigo, $3.count_codigo);
         char label[32], label2[32], temp[32];

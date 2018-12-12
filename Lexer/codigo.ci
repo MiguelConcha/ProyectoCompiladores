@@ -1,9 +1,1 @@
-t0 = i < 3
-if t0 goto I5
-goto I6
-t1 = i + 1
-x = 3
-i = 4
-if 3 goto I5
-i = t1
-L0:
+::

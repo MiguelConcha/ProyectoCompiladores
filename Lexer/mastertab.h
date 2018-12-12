@@ -9,6 +9,7 @@ struct _symbol{
 	int dir;
 	int var;
 	int args[100];
+	int num_args;
 };
 
 typedef struct _symbol sym;
@@ -24,6 +25,7 @@ void print_table(symtab*);
 int get_dir(symtab*, char*);
 int get_type(symtab*, char *);
 void create_table(symtab *st);
+char* map_type(int);
 
 struct _typerow{
 	int type;

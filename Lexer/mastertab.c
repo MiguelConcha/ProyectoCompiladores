@@ -23,9 +23,21 @@ int insert(symtab *st, sym s){
 
 void print_table(symtab* st){    
     int i;
-    printf("POS\tID\tTIPO\tDIR\n");    
+    printf("POS\tID\tTIPO\tDIR\tVAR\tARGS\n");    
     for(i=0; i < st->count; i++){
-        printf("%d\t%s\t%d\t%d\n", i, st->symbols[i].id, st->symbols[i].type, st->symbols[i].dir);        
+		char rep[st->symbols[i].num_args];
+		strcpy(rep, "");
+		if(st->symbols[i].var != 1) {
+			strcpy(rep, "---");
+		} else {
+			for(int j = 0; j < st->symbols[i].num_args;j++){
+				char tmp[21];
+				sprintf(tmp, "%s", map_type(st->symbols[i].args[j]));
+				strcat(rep, tmp);
+				strcat(rep, " ");
+			}
+		}
+        printf("%d\t%s\t%d\t%d\t%d\t%s\n", i, st->symbols[i].id, st->symbols[i].type, st->symbols[i].dir, st->symbols[i].var, rep);       
     }
 }
 
@@ -74,6 +86,8 @@ char* map_type(int t) {
         return "ARR";
 	if (t == 6)
 		return "STRUCT";
+    if (t== 7)
+        return "FUNC";
     char *str = (char*)malloc(100);
     sprintf(str, "%d", t);
     return str;
