@@ -276,24 +276,34 @@ arreglo:
 ;
 
 funcs:
-	 FUNC tipo ID LPAR args RPAR {
-	 	sym s;
-		strcpy(s.id, $3);
-		s.type = $2.type;
-		s.dir = stack_masterchefs->tabla->tt->count;
-		s.var = 1;
-		for(int j = 0; j < $5.num; j++){
-			s.args[j] = $5.lista_args[j];
-		}
-		s.num_args = $5.num;
-		insert(stack_masterchefs->tabla->st, s);
-
+	 FUNC tipo ID {
 		struct mastertab* ntab = (struct mastertab *) malloc(sizeof(struct mastertab));
 		ntab->tt = (typetab *) malloc(sizeof(typetab));
-		ntab->st= (symtab *) malloc(sizeof(symtab));
+		ntab->st = (symtab *) malloc(sizeof(symtab));
 		create_table(ntab->st);
 		create_type_table(ntab->tt);
 		stack_masterchefs = mete(stack_masterchefs, ntab);
+	 }
+	 LPAR args RPAR {
+		cuadrupla c;
+		c.op = LABEL;
+		char lab[32];
+		strcpy(lab, newLabel());
+		strcpy(c.op1, "");
+		strcpy(c.op2, "");
+		strcpy(c.res, $3);
+		insert_cuad(&codigo_intermedio, c);
+
+	 	sym s;
+		strcpy(s.id, $3);
+		s.type = $2.type;
+		s.dir = masterchef->tt->count;
+		s.var = 1;
+		for(int j = 0; j < $6.num; j++){
+			s.args[j] = $6.lista_args[j];
+		}
+		s.num_args = $6.num;
+		insert(masterchef->st, s);
 
 	 }
 	 LCURLYB decls sents {
@@ -302,10 +312,10 @@ funcs:
         c.op = LABEL;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
-        strcpy(c.res, get_first(&$10));
+        strcpy(c.res, get_first(&$11));
         insert_cuad(&codigo_intermedio, c);                
         strcpy(label, newLabel());                                                
-        backpatch(&$10, label, &codigo_intermedio);
+        backpatch(&$11, label, &codigo_intermedio);
 	 }
 	 RCURLYB {
 		struct mastertab* sacada;// = (struct mastertab *) malloc(sizeof(struct mastertab));
@@ -314,12 +324,20 @@ funcs:
 
 		typerow renglon;
 		renglon.type = 7;
-		renglon.tam = $9.cantidad;
+		renglon.tam = $10.cantidad;
 		renglon.base.renglon = -2;
 		renglon.base.smt = sacada;
 		insert_type_table(stack_masterchefs->tabla->tt, renglon);
 	  	//$$.type = stack_masterchefs->tabla->tt->count-1; 
 		//$$.bytes = $4.cantidad; 
+		cuadrupla c;
+		char label2[32];
+		strcpy(label2, newLabel());
+		c.op = GOTO;
+		strcpy(c.op1, "");
+		strcpy(c.op2, "");
+		strcpy(c.res, label2);
+        insert_cuad(&codigo_intermedio, c);                
 	 } funcs 
 	 | %empty 
 ;
@@ -335,7 +353,26 @@ args:
 
 lista_args:
 		  lista_args COMMA tipo ID parte_arr  {
-		  		$$.num = 1 + $1.num;
+		  		
+			typerow renglon;
+			renglon.type = $3.type;
+			renglon.tam = $3.type;
+			renglon.base.renglon = $3.type;
+			insert_type_table(stack_masterchefs->tabla->tt, renglon);
+	 		
+			print_type_table(stack_masterchefs->tabla->tt);
+			sym s;
+			strcpy(s.id, $4);
+			//s.type = stack_masterchefs->tabla->tt->count-1;
+			s.type = $3.type;
+			s.dir = dir;
+			dir+= renglon.tam;
+			insert(stack_masterchefs->tabla->st, s);
+
+			print_table(stack_masterchefs->tabla->st);
+		
+		
+		$$.num = 1 + $1.num;
 				 for(int i = 0; i < $1.num; i++){
 					$$.lista_args[i] = $1.lista_args[i];
 				 }
@@ -345,6 +382,23 @@ lista_args:
 		  | tipo ID parte_arr {
 			     $$.num = 1;
 				 $$.lista_args[0] = $1.type;
+				
+				typerow renglon;
+				renglon.type = $1.type;
+				renglon.tam = $1.type;
+				renglon.base.renglon = $1.type;
+				insert_type_table(stack_masterchefs->tabla->tt, renglon);
+	 		
+				print_type_table(stack_masterchefs->tabla->tt);
+				sym s;
+				strcpy(s.id, $2);
+				//s.type = stack_masterchefs->tabla->tt->count-1;
+				s.type = $1.type;
+				s.dir = dir;
+				dir+= renglon.tam;
+				insert(stack_masterchefs->tabla->st, s);
+
+				print_table(stack_masterchefs->tabla->st);
 		  }
 ;
 
@@ -491,8 +545,11 @@ assign:
                 char i[32];
                 strcpy(i, newIndex());
                 $$ = create_list(i);
+				printf("abajo\n");
                 printf("%s, %s, %d\n", $1.id1, $1.id2,$1.type);
+				printf("abajo1\n");
                 exp e = asignacion($1.id1, $1.id2, $3, $1.type); 
+				printf("abajo2\n");
                 printf("S->parte_izq = E;\n");
 				int iterador;
 				$$.count_codigo = e.count_codigo;
@@ -857,13 +914,18 @@ int get_tipo_tablas(char *id) {
 
 exp asignacion(char *id, char *id2, exp e, int trecibido){
 	exp e1;
+	printf("asignaciooon\n");
 	e1.count_codigo = 0;
 	if(trecibido == -1) {
+		printf("moco\n");
 		int tipo;
 		int es_estruct = 0;
 		if(strcmp(id2, "") == 0) {
+			printf("id2 fue vacio\n");
 			tipo = get_tipo_tablas(id);
+			printf("%dtipin\n", tipo);
 		} else {
+			printf("pedro\n");
 			es_estruct = 1;
 			int renglon = search(masterchef->st, id);
 			if (renglon == -1) {
@@ -891,12 +953,17 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
 		}
 
 		if( tipo != -1){        
-			printf("djekjde");
+			printf("ichi\n");
 			e1.type = e.type;
+			printf("dlkeldkelkdlek\n");
 			strcpy(e1.dir, id);
+			printf("dlkeldkelkdlek\n");
 			cuadrupla c;
 			c.op = ASSIGNATION;
+			printf("o\n");
+			printf("%s %d %d\n", e.dir, tipo, e.type);
 			strcpy(c.op1, reducir(e.dir, tipo, e.type));
+			printf("o\n");
 			strcpy(c.op2, "");
 			if(es_estruct == 1) {
 				char id_con_punto[65];
@@ -905,6 +972,7 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
 				strcat(id_con_punto, id2);
 				strcpy(c.res, id_con_punto);
 			} else {
+				printf("llega\n");
 				strcpy(c.res, id);
 			}
 			//insert_cuad(&codigo_intermedio, c);  

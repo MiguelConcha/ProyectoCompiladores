@@ -1,2 +1,2 @@
-z = 1
-L1:
+main:p = 1
+L2:goto L3
