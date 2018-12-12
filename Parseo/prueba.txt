@@ -1,0 +1,17 @@
+int a[3];
+int b[1];
+char c[10];
+float d;
+double e;
+char f;
+struct {
+	int x;
+	struct {
+		double ar[3][2];
+		char p;
+	} eder;
+	int y;
+	float z;
+} v;
+int g;
+a[3] = b[1+1];

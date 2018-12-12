@@ -1,0 +1,11 @@
+struct {
+	int x;
+	struct {
+		float y;
+		struct {
+			double z;
+		} w;
+	} kk;
+} v;
+int z;
+if (true) z=5;

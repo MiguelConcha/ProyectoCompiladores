@@ -1,0 +1,6 @@
+/*dlekdkjekdjkej*/
+int identifador[3];
+
+func int pedro() {
+	return;
+}

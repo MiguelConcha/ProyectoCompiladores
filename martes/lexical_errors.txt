@@ -1,0 +1,5 @@
+Ocurrió un error léxico: 
+Línea: 2
+Columna: 6
+Carácter que lo ocasiona: `
+
