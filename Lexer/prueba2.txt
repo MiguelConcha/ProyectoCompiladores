@@ -7,6 +7,5 @@ func int main(int arg[], int f[][][]){
 	int c;
 	int d;
 	char e;
-	d = suma(d, c);
-	if(lafjs) return 8; else return 7;
+	if(c > d) return 8; else return 7;
 }

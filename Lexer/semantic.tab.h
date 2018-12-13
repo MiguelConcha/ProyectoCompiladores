@@ -129,15 +129,16 @@ union YYSTYPE
         labels siguientes;
         int ifelse;
     } siguientesp;
+	int dims;
     int rel;
 	char char_signo[1];
 	struct {
 		int p;
-		int lista_tipos[100];
+		int lista_tipos[100][2];
 		int count;
 	} parrams;
 
-#line 141 "semantic.tab.h" /* yacc.c:1909  */
+#line 142 "semantic.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

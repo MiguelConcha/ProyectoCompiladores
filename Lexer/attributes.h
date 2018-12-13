@@ -11,7 +11,7 @@ typedef struct _type{
 
 typedef struct _args{
 	int num;
-	int lista_args[100];
+	int lista_args[100][2];
 } argumentos;
 
 typedef struct _pii{
@@ -24,6 +24,8 @@ typedef struct _exp{
 	cuadrupla arr_codigo[100];
 	char dir[32];
 	int type;
+	int tipo_basico;
+	int dims;
 	int count_codigo;
 } exp;
 
@@ -31,7 +33,11 @@ typedef struct _varr{
 	char dir[32];
 	typetab* tt;
 	int type;
+	int tipo_basico;
+	int dims;
 	char representacion[165];
+	int tamanios[100];
+	int indice_tamanios;
 } varr;
 
 typedef struct _numero{

@@ -1,7 +1,10 @@
-int b;
-func void a(){
-	while(b < 2) {
-		if(b <3) break; else break;
-	}
-	if(b < 2) b=2;
+int b[1][2][3];
+float zzz;
+func void a(int c[], int d){
+	return;
+}
+func void main(){
+	int z;
+	int q;
+	z = a(b[0][1], q);
 }

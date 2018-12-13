@@ -1,16 +1,6 @@
-a:t0 = b < 2
-if t0 goto I4
-goto I5
-t1 = b < 3
-if t1 goto L3
-goto L4
-L3:goto L1
-goto 
-L4:goto L2
-if  goto I4
-L9:t3 = b < 2
-if t3 goto I6
-goto L8
-I6:b = 2
-goto I8
-L10:goto L11
+a::goto L3
+main:param b[0][1]
+param q
+t0 = call a, 2
+z = t0
+L6:goto L7
