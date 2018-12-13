@@ -751,73 +751,73 @@ parte_izq:
 /* Reglas de producción para la parte izquierda de una asignación cuando es del tipo
    var_arr -> id[exp] */
 var_arr:
-       ID LBRACKET exp RBRACKET { 
-                                  // Verificando que se indexe el arreglo con una expresión de tipo entera.
-                                  if($3.type != 0) { 
-                                    yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
-                                  }
-                                  // Formando la cadena que representa a la variable de arreglo indexada.
-                                  strcpy($$.representacion, $1);
-                                  strcat($$.representacion, "[");
-                                  strcat($$.representacion, $3.dir);
-                                  strcat($$.representacion, "]");
-                                  // Creando un nuevo nodo para iterar la pila de tablas maestras.
-                                  struct nodo* it = stack_masterchefs;
-                                  // Recorremos la pila para buscar el identificador en ella.
-                                  int encontrado = 0;
-                                  while(it != NULL) {
-                                    // Estamos buscando con el identificador en la tabla de símbolos a la que apunta el iterador.
-                                    int x = search(it->tabla->st, $1); 
-                                    if(x != -1) {
-                                        // Si ya la encontramos, podemos consultar el tipo en dicho renglón encontrado.
-                                        encontrado = 1;
-                                        int type_row = it->tabla->st->symbols[x].type;
-                                        $$.type = it->tabla->tt->trs[type_row].base.renglon;
-                                        // En el ciclo seguiremos subiendo a partir de los tipos hasta llegar al de la base.
-                                        // Sin embargo, si en algún punto llegaos a ver un -1 es porque estamos indexando a un arreglo
-                                        // que fue declarado con un número menor de dimensiones y reportamos el error. 
-                                        if($$.type == -1) {
-                                            yyerror("Error: Mayor cantidad de dimensiones que las definidas.");
-                                            exit(1);
-                                        }
-                                        break;
-                                    }
-                                    it = it->siguiente;
-                                  }
-                                  // Si saliendo del ciclo ocurre que el identificador jamás fue encontrado, entonces
-                                  // no había sido declarado antes y reportamos el error.
-                                  if(!encontrado) {
-                                    yyerror("Error: El arreglo no fue declarado antes.\n");
-                                    exit(1);
-                                  }
-                                  // Especificando que la tabla de tipos del lado izquierdo es la tabla a la que apunta el iterador. 
-                                  $$.tt = it->tabla->tt; 
+    ID LBRACKET exp RBRACKET { 
+          // Verificando que se indexe el arreglo con una expresión de tipo entera.
+          if($3.type != 0) { 
+            yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
+          }
+          // Formando la cadena que representa a la variable de arreglo indexada.
+          strcpy($$.representacion, $1);
+          strcat($$.representacion, "[");
+          strcat($$.representacion, $3.dir);
+          strcat($$.representacion, "]");
+          // Creando un nuevo nodo para iterar la pila de tablas maestras.
+          struct nodo* it = stack_masterchefs;
+          // Recorremos la pila para buscar el identificador en ella.
+          int encontrado = 0;
+          while(it != NULL) {
+            // Estamos buscando con el identificador en la tabla de símbolos a la que apunta el iterador.
+            int x = search(it->tabla->st, $1); 
+            if(x != -1) {
+                // Si ya la encontramos, podemos consultar el tipo en dicho renglón encontrado.
+                encontrado = 1;
+                int type_row = it->tabla->st->symbols[x].type;
+                $$.type = it->tabla->tt->trs[type_row].base.renglon;
+                // En el ciclo seguiremos subiendo a partir de los tipos hasta llegar al de la base.
+                // Sin embargo, si en algún punto llegaos a ver un -1 es porque estamos indexando a un arreglo
+                // que fue declarado con un número menor de dimensiones y reportamos el error. 
+                if($$.type == -1) {
+                    yyerror("Error: Mayor cantidad de dimensiones que las definidas.");
+                    exit(1);
+                }
+                break;
+            }
+            it = it->siguiente;
+          }
+          // Si saliendo del ciclo ocurre que el identificador jamás fue encontrado, entonces
+          // no había sido declarado antes y reportamos el error.
+          if(!encontrado) {
+            yyerror("Error: El arreglo no fue declarado antes.\n");
+            exit(1);
+          }
+          // Especificando que la tabla de tipos del lado izquierdo es la tabla a la que apunta el iterador. 
+          $$.tt = it->tabla->tt; 
        }  
-       | var_arr LBRACKET exp RBRACKET {
-                                  // Regla de producción recursiva para seguir metiendo indexaciones.
-                                  // Armando la representación de la indexación.
-                                  strcat($$.representacion, "[");
-                                  strcat($$.representacion, $3.dir);
-                                  strcat($$.representacion, "]");
-                                  // Checando que se indexe con una expresión de tipo entera.
-                                  if($3.type != 0) { 
-                                    yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
-                                  }
-                                  // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
-                                  if($1.type == -1) {
-                                    yyerror("Error: Mayor cantidad de dimensiones que las definidas");
-                                    exit(1);
-                                  } 
-                                  // Checando el tipo del rengón del varr_arr del cuerpo de la producción.
-                                  int row_hijo = $1.type;
-                                  $$.type = (*$1.tt).trs[row_hijo].base.renglon;
-                                  // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
-                                  if($$.type == -1) {
-                                    yyerror("Error: Mayor cantidad de dimensiones que las definidas");
-                                    exit(1);
-                                  } 
-                                  // La tabla de tipos de la cabecera es la del varr_arr del cuerpo.
-                                  $$.tt = $1.tt;
+    | var_arr LBRACKET exp RBRACKET {
+          // Regla de producción recursiva para seguir metiendo indexaciones.
+          // Armando la representación de la indexación.
+          strcat($$.representacion, "[");
+          strcat($$.representacion, $3.dir);
+          strcat($$.representacion, "]");
+          // Checando que se indexe con una expresión de tipo entera.
+          if($3.type != 0) { 
+            yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
+          }
+          // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
+          if($1.type == -1) {
+            yyerror("Error: Mayor cantidad de dimensiones que las definidas");
+            exit(1);
+          } 
+          // Checando el tipo del rengón del varr_arr del cuerpo de la producción.
+          int row_hijo = $1.type;
+          $$.type = (*$1.tt).trs[row_hijo].base.renglon;
+          // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
+          if($$.type == -1) {
+            yyerror("Error: Mayor cantidad de dimensiones que las definidas");
+            exit(1);
+          } 
+          // La tabla de tipos de la cabecera es la del varr_arr del cuerpo.
+          $$.tt = $1.tt;
        }
 ;
 
@@ -864,79 +864,79 @@ exp:
               printf("%s\n",$1.val);
             }
    | CARACTER { 
-                // Pasando el carácter de la expresión regular a un tipo expresión.
-                $$ = envolver_caracter($1); 
-                printf("E -> CARACTER\n");
-              }
+        // Pasando el carácter de la expresión regular a un tipo expresión.
+        $$ = envolver_caracter($1); 
+        printf("E -> CARACTER\n");
+    }
    | ID LPAR params RPAR {
-                            // Verificamos que la llama a la función sea válida 
-                            // de acuerdo a la lista de tipos con que fue declarada y los tipos de los
-                            // argumentos.
-                            verifica_call($1, $3.lista_tipos, $3.count);    
-                            char temp[32];
-                            strcpy(temp, newTemp());
-                            // Creando la cuadrupla para el código.
-                            cuadrupla c;
-                            // Es una llamada a función.
-                            c.op = CALL;
-                            strcpy(c.op1, $1);
-                            sprintf(c.op2, "%d", $3.count);
-                            strcpy(c.res, temp);
-                            insert_cuad(&codigo_intermedio, c);                    
-                            strcpy($$.dir, temp);
-                        }
+        // Verificamos que la llama a la función sea válida 
+        // de acuerdo a la lista de tipos con que fue declarada y los tipos de los
+        // argumentos.
+        verifica_call($1, $3.lista_tipos, $3.count);    
+        char temp[32];
+        strcpy(temp, newTemp());
+        // Creando la cuadrupla para el código.
+        cuadrupla c;
+        // Es una llamada a función.
+        c.op = CALL;
+        strcpy(c.op1, $1);
+        sprintf(c.op2, "%d", $3.count);
+        strcpy(c.res, temp);
+        insert_cuad(&codigo_intermedio, c);                    
+        strcpy($$.dir, temp);
+    }
 ;
 
 /* Reglas de producción para los parámetros.
    params -> lista_param | ε */
 params:
-      lista_param {
-            // El número de parámetros es el que carga la lista.
-            $$.p = $1.p;
-            // Copiamos los tipos parámetros de la lista de parámetros.
-            int i;
-            for (i = 0; i < $1.count; i++) {
-                $$.lista_tipos[i] = $1.lista_tipos[i];
-            }
-            // El número de parámetros son los de la lista de parámetros.
-            $$.count = $1.count;
-      }
-      | /* empty */ {
-                // Si cae en este caso, el número de parámetros es cero. 
-                $$.p = 0; 
-                $$.count = 0;
-               }
+  lista_param {
+    // El número de parámetros es el que carga la lista.
+    $$.p = $1.p;
+    // Copiamos los tipos parámetros de la lista de parámetros.
+    int i;
+    for (i = 0; i < $1.count; i++) {
+        $$.lista_tipos[i] = $1.lista_tipos[i];
+    }
+    // El número de parámetros son los de la lista de parámetros.
+    $$.count = $1.count;
+  }
+  | /* empty */ {
+        // Si cae en este caso, el número de parámetros es cero. 
+        $$.p = 0; 
+        $$.count = 0;
+   }
 ;
 
 /* Reglas de producción para la lista de parámetros.
    lista_param -> lista_param , exp | exp */
 lista_param:
-           lista_param COMMA exp {
-                // Creando la cuadrupla e insertándola en el código intermedio.
-                cuadrupla c;
-                c.op = PARAM;
-                strcpy(c.op1, "");
-                strcpy(c.op2, "");
-                strcpy(c.res, $3.dir);
-                insert_cuad(&codigo_intermedio, c);  
-                // Incrementando la cantidad de argumentos y copiando el tipo del actual.                  
-                $$.p = $1.p + 1;
-                $$.lista_tipos[$1.count] = $3.type;
-                $$.count = $1.count + 1;
-           }
-           | exp {
-                // Creando la cuadrupla e insertándola en el código intermedio.
-                cuadrupla c;
-                c.op = PARAM;
-                strcpy(c.op1, "");
-                strcpy(c.op2, "");
-                strcpy(c.res, $1.dir);
-                insert_cuad(&codigo_intermedio, c);
-                // Como es el caso base, tenemos un solo argumento y su tipo es el tipo de la expresión.                    
-                $$.p = 1;
-                $$.lista_tipos[0] = $1.type;
-                $$.count = 1;
-           }
+   lista_param COMMA exp {
+        // Creando la cuadrupla e insertándola en el código intermedio.
+        cuadrupla c;
+        c.op = PARAM;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, $3.dir);
+        insert_cuad(&codigo_intermedio, c);  
+        // Incrementando la cantidad de argumentos y copiando el tipo del actual.                  
+        $$.p = $1.p + 1;
+        $$.lista_tipos[$1.count] = $3.type;
+        $$.count = $1.count + 1;
+   }
+   | exp {
+        // Creando la cuadrupla e insertándola en el código intermedio.
+        cuadrupla c;
+        c.op = PARAM;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, $1.dir);
+        insert_cuad(&codigo_intermedio, c);
+        // Como es el caso base, tenemos un solo argumento y su tipo es el tipo de la expresión.                    
+        $$.p = 1;
+        $$.lista_tipos[0] = $1.type;
+        $$.count = 1;
+   }
 ;
 
 /* Reglas de producción para las condiciones.
