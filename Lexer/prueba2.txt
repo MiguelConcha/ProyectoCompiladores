@@ -8,6 +8,5 @@ func int main(int arg[], int f[][][]){
 	int d;
 	char e;
 	d = suma(d, c);
-	return d;
-	while(5<3){ break; }
+	if(lafjs) return 8; else return 7;
 }

@@ -19,6 +19,7 @@
 	void finish();
 	/* Variable para el conteo de direcciones */
 	int dir=0;
+	char current_label[32];
 
 	/* Variables para guardar el tipo y ancho actual */
 	int current_type;
@@ -26,12 +27,16 @@
 	int current_arr_type;
 	int current_dim_arr;
 	int current_function_type;
+	char siguiente_breakable_pila[100][32];
+	int siguiente_count = 0;
 
 	/* Varaibles para contar las temporales, etiquetas e indices */
 	int label;
 	int temp;
 	int indice;
 	int breakeablecitos = 0;
+	char pila_switch[100][32];
+	int count_switch = 0;
 
 	/* Variable para el unico atributo heredado de sentencia prima*/
 	labels lfalses;
@@ -166,7 +171,8 @@
 %type<vararr> var_arr
 %type<rel> rel
 %type<booleanos> cond
-%type<siguientes> sent sents assign
+%type<booleanos> casos
+%type<siguientes> sent sents assign 
 %type<siguientesp> sentp
 %type<pi> parte_izq
 %type<char_signo> signo
@@ -178,7 +184,7 @@
 
 prog:
 	{ init(); } decls 
-	funcs	
+	funcs
     {
 	 	print_type_table(masterchef->tt);
 		print_table(masterchef->st); 
@@ -479,7 +485,11 @@ sent:
             printf("S->if(B)S else S\n");
         }
     }
-    | WHILE  LPAR cond RPAR { breakeablecitos += 1; } sent {
+    | WHILE  LPAR cond RPAR {
+		breakeablecitos += 1;
+		strcpy(siguiente_breakable_pila[siguiente_count], $<siguientes>$.label[0]);
+		siguiente_count++;
+	} sent {
         char label[32], label2[32], temp[32];
         strcpy(label, newIndex());                
         strcpy(label2, newIndex());         
@@ -494,9 +504,15 @@ sent:
         backpatch(&$3.trues, label, &codigo_intermedio);
         backpatch(&$3.falses, label2, &codigo_intermedio);
         printf("S->while(B)S\n");
-		breakeablecitos -= 1;
+		breakeablecitos -= 1; 
+		strcpy(siguiente_breakable_pila[siguiente_count], $<siguientes>$.label[0]);
+		siguiente_count--;
     }
-    | DO { breakeablecitos += 1; } sent WHILE LPAR cond RPAR SEMICOLON {
+    | DO {
+		breakeablecitos += 1;
+		strcpy(siguiente_breakable_pila[siguiente_count], $<siguientes>$.label[0]);
+		siguiente_count++;
+	} sent WHILE LPAR cond RPAR SEMICOLON {
 		char label[32], label2[32], temp[32];
         strcpy(label, newIndex());                
 
@@ -516,8 +532,13 @@ sent:
         backpatch(&$6.falses, label2, &codigo_intermedio);
         printf("S->do S while(B)\n");
 		breakeablecitos -= 1;
+		siguiente_count++;
 	}
-    | FOR LPAR assign SEMICOLON cond SEMICOLON assign RPAR { breakeablecitos += 1; } sent {
+    | FOR LPAR assign SEMICOLON cond SEMICOLON assign RPAR { 
+		breakeablecitos += 1; 
+		strcpy(siguiente_breakable_pila[siguiente_count], $<siguientes>$.label[0]);
+		siguiente_count++;
+	} sent {
 		meter_assign($3.arr_codigo, $3.count_codigo);
         char label[32], label2[32], temp[32];
         strcpy(label, newIndex());                
@@ -535,6 +556,7 @@ sent:
 		meter_assign($7.arr_codigo, $7.count_codigo);
         printf("S->for(ass; cond; ass) sent\n");
 		breakeablecitos -= 1;
+		siguiente_count--;
     }
 	| assign SEMICOLON { meter_assign($1.arr_codigo, $1.count_codigo); }
 	| RETURN exp SEMICOLON {
@@ -565,7 +587,20 @@ sent:
         backpatch(&$2, label, &codigo_intermedio);                                
         printf("S->{SS}\n");
     }  
-	| SWITCH LPAR exp RPAR LCURLYB casos RCURLYB 
+	| SWITCH LPAR exp RPAR { if($3.type != 0) {
+								yyerror("La expresion del switch debe ser un numero entero\n");
+								exit(1);
+							 }
+							breakeablecitos++;
+							strcpy(siguiente_breakable_pila[siguiente_count], $<siguientes>$.label[0]);
+							siguiente_count++;
+	
+				     		strcpy(pila_switch[count_switch], $3.dir); count_switch++; 
+						} LCURLYB casos RCURLYB {
+							count_switch--;
+							breakeablecitos--;
+							siguiente_count--;
+						}
 	| BREAK SEMICOLON { if(breakeablecitos < 1) {
 							yyerror("El break debe estar dentro de un ciclo \n");
 							exit(1);
@@ -573,7 +608,7 @@ sent:
 						cuadrupla c1;
 						c1.op = GOTO;
 						char label1[32];
-						strcpy(label1, newLabel());
+						strcpy(label1, newLabel());//siguiente_breakable_pila[siguiente_count]);
 						strcpy(c1.op1, "");
 						strcpy(c1.op2, "");
 						strcpy(c1.res, label1);
@@ -625,7 +660,56 @@ sentp:
 ;
 
 casos:
-	 CASE numero sent casos 
+	 CASE numero { 
+        char i[32];
+        char i2[32];
+        char temp[32];
+        strcpy(i, newIndex());
+        strcpy(i2, newIndex());
+        strcpy(temp, newTemp());
+        strcpy(current_label, i2);
+
+        $<booleanos>$.trues = create_list(i);
+        $<booleanos>$.falses = create_list(i2);
+
+        cuadrupla c, c1, c2;
+        c.op = EQUALS;
+		char tope_dir[32];
+		strcpy(tope_dir, pila_switch[count_switch-1]);
+        strcpy(c.op1, tope_dir);
+        strcpy(c.op2, $2.val);
+        strcpy(c.res, temp);            
+        c1.op = IFF;
+        strcpy(c1.op1, temp);
+        strcpy(c1.op2, "GOTO");
+        strcpy(c1.res, i);            
+        c2.op = GOTO;
+        strcpy(c2.op1, "");
+        strcpy(c2.op2, "");
+        strcpy(c2.res, i2);
+        insert_cuad(&codigo_intermedio, c);
+        insert_cuad(&codigo_intermedio, c1);
+        insert_cuad(&codigo_intermedio, c2);
+        printf("B-> case num: sent \n");
+
+		//quiza esto es basura
+        cuadrupla c3;
+        c3.op = LABEL;
+        strcpy(c3.op1, "");
+        strcpy(c3.op2, "");
+        strcpy(c3.res, i);
+        insert_cuad(&codigo_intermedio, c3);
+    } sent {
+        cuadrupla c, c1;
+        c.op = LABEL;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, current_label);
+        push_label(&lfalses, get_first(&$<booleanos>$.falses));
+        insert_cuad(&codigo_intermedio, c);
+
+	 }
+	 casos 
 	 | DEFAULT sent 
 	 | %empty 
 ;
