@@ -326,7 +326,11 @@ arreglo:
         /* Obtenemos el las dimenciones del arreglo hijo y le agregamos el de la actual
             dimensión. */
         if ($2.type != 0) {
-            yyerror("El número para indexar en el arreglo debe ser entero.");
+            yyerror("El número para declarar en el arreglo debe ser entero.");
+            exit(1);
+        }
+        if ($2.val[0] == '-') {
+            yyerror("Error: No se puede declarar dimensión negativa.");
             exit(1);
         }
         $$.tam = $4.tam + 1;
@@ -756,6 +760,10 @@ var_arr:
           if($3.type != 0) { 
             yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
           }
+          if($3.dir[0] != 't' && $3.dir[0] == '-') {
+            yyerror("No puedes indexar el arreglo con un arreglo con un número negativo");
+            exit(1);
+          }
           // Formando la cadena que representa a la variable de arreglo indexada.
           strcpy($$.representacion, $1);
           strcat($$.representacion, "[");
@@ -802,6 +810,10 @@ var_arr:
           // Checando que se indexe con una expresión de tipo entera.
           if($3.type != 0) { 
             yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
+          }
+          if($3.dir[0] != 't' && $3.dir[0] == '-') {
+            yyerror("No puedes indexar el arreglo con un arreglo con un número negativo");
+            exit(1);
           }
           // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
           if($1.type == -1) {
