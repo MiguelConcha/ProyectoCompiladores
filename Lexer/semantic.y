@@ -228,7 +228,7 @@ decls:
         current_arr_type = current_type;
      } 
      lista SEMICOLON decls {$$.cantidad = $3.cantidad; $$.cantidad += $5.cantidad; } /*no estamos seguros*/
-     | %empty { $$.cantidad = 0; }
+     | /* empty */ { $$.cantidad = 0; }
 ;
 
 /* Regla que nos donde se dice el tipo de las variables en lista.
@@ -316,7 +316,7 @@ numero:
 signo: 
 	 PLUS { strcpy($$,""); }
 	 | MINUS { strcpy($$, "-"); }
-	 | %empty { strcpy($$,""); }
+	 | /* empty */ { strcpy($$,""); }
 ;
 
 /* Aquí se definen las dimensiones de los arreglos.
@@ -341,7 +341,7 @@ arreglo:
         insert_type_table(stack_masterchefs->tabla->tt, renglon);
         current_arr_type = stack_masterchefs->tabla->tt->count-1;
     } 
-    | %empty { $$.tam = 0; }
+    | /* empty */ { $$.tam = 0; }
 ;
 
 /* Definiciones de las funciones
@@ -417,7 +417,7 @@ funcs:
 		strcpy(c.res, label2);
         insert_cuad(&codigo_intermedio, c);                
      } funcs 
-     | %empty 
+     | /* empty */ 
 ;
 
 /* Argumentos de las funciones.
@@ -430,7 +430,7 @@ args:
             $$.lista_args[i] = $1.lista_args[i];
         }
     }
-	| %empty { $$.num = 0; }
+	| /* empty */ { $$.num = 0; }
 ;
 
 /* Lista de argumentos de las funciones.
@@ -487,7 +487,7 @@ lista_args:
    parte_arr -> [] parte_arr | ɛ */
 parte_arr:
         LBRACKET RBRACKET parte_arr 
-        | %empty 
+        | /* empty */ 
 ;
 
 /* Concatenación de sentencias
@@ -651,7 +651,7 @@ sent:
         insert_cuad(&codigo_intermedio, c1);
 	
 	}
-	| RETURN semicolon {
+	| RETURN SEMICOLON {
         /* Verificamos que el tipo de la función sea void */
         if(4 != current_function_type) {
             yyerror("tipo de retorno void distinto al tipo de la funcion \n");
@@ -712,7 +712,7 @@ assign:
 /* Parte del if que incluye o no un else
    sentp -> ɛ | else sent */
 sentp:
-	{ /* Decimos que no tenemos un else */ $$.ifelse= false;} %prec ifx
+	{ /* Decimos que no tenemos un else */ $$.ifelse= false;} %prec IFX
 	| ELSE {        
 	    /* Agregamos la etiqueta que tenemos en los falses al código*/
         cuadrupla c1;
@@ -734,7 +734,7 @@ sentp:
 casos:
     CASE numero sent casos 
     | DEFAULT sent 
-    | %empty 
+    | /* empty */ 
 ;
 
 /* Parte izquierda de una asignación.
@@ -901,7 +901,7 @@ params:
             // El número de parámetros son los de la lista de parámetros.
             $$.count = $1.count;
       }
-      | %empty {
+      | /* empty */ {
                 // Si cae en este caso, el número de parámetros es cero. 
                 $$.p = 0; 
                 $$.count = 0;
@@ -1030,7 +1030,7 @@ cond:
         printf("b->e rel e\n");
         printf("e1.dir %s rel e2.dir %s\n", $1.dir, $3.dir);
     }
-    | true {
+    | TRUE {
         char i[32];
         strcpy(i, newindex());
         $$.trues = create_list(i);
@@ -1044,7 +1044,7 @@ cond:
         insert_cuad(&codigo_intermedio, c);
         printf("b->true\n");
     } 
-    | false {
+    | FALSE {
         char i[32];
         strcpy(i, newindex());
         $$.falses = create_list(i);
