@@ -752,20 +752,20 @@ parte_izq:
    var_arr -> id[exp] */
 var_arr:
     ID LBRACKET exp RBRACKET { 
-          // Verificando que se indexe el arreglo con una expresión de tipo entera.
-          if($3.type != 0) { 
+        // Verificando que se indexe el arreglo con una expresión de tipo entera.
+        if($3.type != 0) { 
             yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
-          }
-          // Formando la cadena que representa a la variable de arreglo indexada.
-          strcpy($$.representacion, $1);
-          strcat($$.representacion, "[");
-          strcat($$.representacion, $3.dir);
-          strcat($$.representacion, "]");
-          // Creando un nuevo nodo para iterar la pila de tablas maestras.
-          struct nodo* it = stack_masterchefs;
-          // Recorremos la pila para buscar el identificador en ella.
-          int encontrado = 0;
-          while(it != NULL) {
+        }
+        // Formando la cadena que representa a la variable de arreglo indexada.
+        strcpy($$.representacion, $1);
+        strcat($$.representacion, "[");
+        strcat($$.representacion, $3.dir);
+        strcat($$.representacion, "]");
+        // Creando un nuevo nodo para iterar la pila de tablas maestras.
+        struct nodo* it = stack_masterchefs;
+        // Recorremos la pila para buscar el identificador en ella.
+        int encontrado = 0;
+        while(it != NULL) {
             // Estamos buscando con el identificador en la tabla de símbolos a la que apunta el iterador.
             int x = search(it->tabla->st, $1); 
             if(x != -1) {
@@ -783,92 +783,92 @@ var_arr:
                 break;
             }
             it = it->siguiente;
-          }
-          // Si saliendo del ciclo ocurre que el identificador jamás fue encontrado, entonces
-          // no había sido declarado antes y reportamos el error.
-          if(!encontrado) {
+        }
+        // Si saliendo del ciclo ocurre que el identificador jamás fue encontrado, entonces
+        // no había sido declarado antes y reportamos el error.
+        if(!encontrado) {
             yyerror("Error: El arreglo no fue declarado antes.\n");
             exit(1);
-          }
-          // Especificando que la tabla de tipos del lado izquierdo es la tabla a la que apunta el iterador. 
-          $$.tt = it->tabla->tt; 
-       }  
+        }
+        // Especificando que la tabla de tipos del lado izquierdo es la tabla a la que apunta el iterador. 
+        $$.tt = it->tabla->tt; 
+    }  
     | var_arr LBRACKET exp RBRACKET {
-          // Regla de producción recursiva para seguir metiendo indexaciones.
-          // Armando la representación de la indexación.
-          strcat($$.representacion, "[");
-          strcat($$.representacion, $3.dir);
-          strcat($$.representacion, "]");
-          // Checando que se indexe con una expresión de tipo entera.
-          if($3.type != 0) { 
+        // Regla de producción recursiva para seguir metiendo indexaciones.
+        // Armando la representación de la indexación.
+        strcat($$.representacion, "[");
+        strcat($$.representacion, $3.dir);
+        strcat($$.representacion, "]");
+        // Checando que se indexe con una expresión de tipo entera.
+        if($3.type != 0) { 
             yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
-          }
-          // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
-          if($1.type == -1) {
+        }
+        // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
+        if($1.type == -1) {
             yyerror("Error: Mayor cantidad de dimensiones que las definidas");
             exit(1);
-          } 
-          // Checando el tipo del rengón del varr_arr del cuerpo de la producción.
-          int row_hijo = $1.type;
-          $$.type = (*$1.tt).trs[row_hijo].base.renglon;
-          // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
-          if($$.type == -1) {
+        } 
+        // Checando el tipo del rengón del varr_arr del cuerpo de la producción.
+        int row_hijo = $1.type;
+        $$.type = (*$1.tt).trs[row_hijo].base.renglon;
+        // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
+        if($$.type == -1) {
             yyerror("Error: Mayor cantidad de dimensiones que las definidas");
             exit(1);
-          } 
-          // La tabla de tipos de la cabecera es la del varr_arr del cuerpo.
-          $$.tt = $1.tt;
-       }
+        } 
+        // La tabla de tipos de la cabecera es la del varr_arr del cuerpo.
+        $$.tt = $1.tt;
+    }
 ;
 
 /* Reglas de producción para las expresiones.
    exp -> exp + exp | exp - exp | exp * exp | exp / exp | exp % exp | varr_arr | 
           CADENA | numero | CARACTER | ID(params) */
 exp:
-   exp PLUS exp { 
-                  $$ = suma($1, $3); 
-                  printf("E -> E + E\n"); 
-                }  
-   | exp MINUS exp { $$ = resta($1, $3); 
-                     printf("E -> E - E\n");
-                   }  
-   | exp PROD exp { 
-                    $$ = multiplicacion($1, $3); 
-                    printf("E -> E * E\n");
-                  } 
-   | exp DIV exp { 
-                   $$ = division($1, $3); 
-                   printf("E -> E / E\n");
-                 } 
-   | exp MOD exp { 
-                   $$ = modulo($1, $3); 
-                   printf("E -> E mod E\n");
-                 } 
-   | var_arr { 
-               $$ = envolver_varr($1); 
-               printf("E -> id[E]\n"); 
-             }
-   | ID { 
-          $$ = identificador($1); 
-          printf("E->id\n");
-          printf("%s\n", $1); 
-        } 
-   | CADENA { 
-              // Pasando la cadena de la expresión regular a un tipo expresión.
-              $$ = envolver_cadena($1); 
-              printf("E -> CADENA\n"); 
-            }
-   | numero { 
-              $$ = get_numero($1);
-              printf("E->numero\n");
-              printf("%s\n",$1.val);
-            }
-   | CARACTER { 
+    exp PLUS exp { 
+        $$ = suma($1, $3); 
+        printf("E -> E + E\n"); 
+    }  
+    | exp MINUS exp { $$ = resta($1, $3); 
+        printf("E -> E - E\n");
+    }  
+    | exp PROD exp { 
+        $$ = multiplicacion($1, $3); 
+        printf("E -> E * E\n");
+    } 
+    | exp DIV exp { 
+        $$ = division($1, $3); 
+        printf("E -> E / E\n");
+    } 
+    | exp MOD exp { 
+        $$ = modulo($1, $3); 
+        printf("E -> E mod E\n");
+    } 
+    | var_arr { 
+        $$ = envolver_varr($1); 
+        printf("E -> id[E]\n"); 
+    }
+    | ID { 
+        $$ = identificador($1); 
+        printf("E->id\n");
+        printf("%s\n", $1); 
+    } 
+    | CADENA { 
+        // Pasando la cadena de la expresión regular a un tipo expresión.
+        $$ = envolver_cadena($1); 
+        printf("E -> CADENA\n"); 
+    }
+    | numero { 
+        $$ = get_numero($1);
+        printf("E->numero\n");
+        printf("%s\n",$1.val);
+    }
+    | CARACTER { 
         // Pasando el carácter de la expresión regular a un tipo expresión.
         $$ = envolver_caracter($1); 
         printf("E -> CARACTER\n");
     }
-   | ID LPAR params RPAR {
+    | ID LPAR params RPAR {
         // Verificamos que la llama a la función sea válida 
         // de acuerdo a la lista de tipos con que fue declarada y los tipos de los
         // argumentos.
@@ -890,22 +890,22 @@ exp:
 /* Reglas de producción para los parámetros.
    params -> lista_param | ε */
 params:
-  lista_param {
-    // El número de parámetros es el que carga la lista.
-    $$.p = $1.p;
-    // Copiamos los tipos parámetros de la lista de parámetros.
-    int i;
-    for (i = 0; i < $1.count; i++) {
-        $$.lista_tipos[i] = $1.lista_tipos[i];
+    lista_param {
+        // El número de parámetros es el que carga la lista.
+        $$.p = $1.p;
+        // Copiamos los tipos parámetros de la lista de parámetros.
+        int i;
+        for (i = 0; i < $1.count; i++) {
+            $$.lista_tipos[i] = $1.lista_tipos[i];
+        }
+        // El número de parámetros son los de la lista de parámetros.
+        $$.count = $1.count;
     }
-    // El número de parámetros son los de la lista de parámetros.
-    $$.count = $1.count;
-  }
-  | /* empty */ {
+    | /* empty */ {
         // Si cae en este caso, el número de parámetros es cero. 
         $$.p = 0; 
         $$.count = 0;
-   }
+    }
 ;
 
 /* Reglas de producción para la lista de parámetros.
@@ -1065,30 +1065,30 @@ cond:
    En cada caso basta con establecer el atributo númerico 
    de la cabecera de la producción dependiendo del token devuelto. */
 rel:
-   LT { 
+    LT { 
         $$ = LESS_THAN; 
         printf("R-> <\n"); 
-      }
-   | GT { 
-          $$ = GREATER_THAN; 
-          printf("R-> >\n");
-        }
-   | LEQ { 
-           $$ = LESS_OR_EQUAL_THAN; 
-           printf("R-> <=\n");
-         }
-   | GEQ { 
-           $$ = GREATER_OR_EQUAL_THAN; 
-           printf("R-> >=\n");
-         }
-   | NEQ { 
-           $$ = NOT_EQUALS;
-           printf("R-> !=\n"); 
-         }
-   | EQ { 
-          $$ = EQUALS; 
-          printf("R-> ==\n");
-        } 
+    }
+    | GT { 
+        $$ = GREATER_THAN; 
+        printf("R-> >\n");
+    }
+    | LEQ { 
+        $$ = LESS_OR_EQUAL_THAN; 
+        printf("R-> <=\n");
+    }
+    | GEQ { 
+        $$ = GREATER_OR_EQUAL_THAN; 
+        printf("R-> >=\n");
+    }
+    | NEQ { 
+        $$ = NOT_EQUALS;
+        printf("R-> !=\n"); 
+    }
+    | EQ { 
+        $$ = EQUALS; 
+        printf("R-> ==\n");
+    } 
 ;
         
 %%
