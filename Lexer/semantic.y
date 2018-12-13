@@ -83,39 +83,39 @@
     exp envolver_cadena(cadena);
     exp envolver_caracter(caracter);
 
-	void meter_assign(cuadrupla [], int);
- 	int max(int t1, int t2);
-  	char *ampliar(char *dir, int t1, int t2);
-  	char *reducir(char *dir, int t1, int t2);
+    void meter_assign(cuadrupla [], int);
+    int max(int t1, int t2);
+    char *ampliar(char *dir, int t1, int t2);
+    char *reducir(char *dir, int t1, int t2);
 
-  	/* Funciones para generar temporales, etiquetas e indices */
-	char *newTemp();
-	char *newLabel();
-	char *newIndex();
+    /* Funciones para generar temporales, etiquetas e indices */
+    char *newTemp();
+    char *newLabel();
+    char *newIndex();
 
-	/* Para funciones */
-	void verifica_call(char[], int[], int);
+    /* Para funciones */
+    void verifica_call(char[], int[], int);
 
 %}
 
 /* Declaración de los atributos que utilizaremos para los no terminales y los tokens */
 %union {
-	struct {
-		int cantidad;
-	} cant;
+    struct {
+        int cantidad;
+    } cant;
     varr vararr;
     numero num;    
     cadena cad;    
     caracter car;    
     arreglo arr;    
-	argumentos argu;
+    argumentos argu;
     char id[32];
-	pii pi;	
+    pii pi; 
     exp expresion;
     type tipo;
     struct{
-		labels falses;
-		labels trues;
+        labels falses;
+        labels trues;
     } booleanos;
     labels siguientes;
     struct{
@@ -123,12 +123,12 @@
         int ifelse;
     } siguientesp;
     int rel;
-	char char_signo[1];
-	struct {
-		int p;
-		int lista_tipos[100];
-		int count;
-	} parrams;
+    char char_signo[1];
+    struct {
+        int p;
+        int lista_tipos[100];
+        int count;
+    } parrams;
 }
 
 /* Declaramos todos los tokens que utilizaremos */
@@ -205,8 +205,8 @@
 /* Regla de producción inicial.
    prog -> decls funcs */
 prog:
-	{ init(); } decls 
-	funcs	
+    { init(); } decls 
+    funcs   
     {
         /* Imprimimos las tablas de tipo y símbolos y finalizamos. */
 	 	print_type_table(masterchef->tt);
@@ -221,14 +221,14 @@ prog:
    En las decls vamos actualizando el tipo actual para heredarlo a lista ya que ahí
    se agrega a la tabla de símbolos. */
 decls:
-	 tipo { 
-	 	current_type = $1.type;
-		current_dim = $1.bytes;
-		current_dim_arr = current_dim; 
-		current_arr_type = current_type;
+     tipo { 
+        current_type = $1.type;
+        current_dim = $1.bytes;
+        current_dim_arr = current_dim; 
+        current_arr_type = current_type;
      } 
-	 lista SEMICOLON decls {$$.cantidad = $3.cantidad; $$.cantidad += $5.cantidad; } /*no estamos seguros*/
-	 | %empty { $$.cantidad = 0; }
+     lista SEMICOLON decls {$$.cantidad = $3.cantidad; $$.cantidad += $5.cantidad; } /*no estamos seguros*/
+     | %empty { $$.cantidad = 0; }
 ;
 
 /* Regla que nos donde se dice el tipo de las variables en lista.
@@ -236,7 +236,7 @@ decls:
    En los tipo básicos sólo tenemos que asignarle el tipo del token al no terminal de tipo.
    Para los structs necesitamos agregarlos a la tabla de tipos. */
 tipo: 
-	INTTYPE { $$.type = 0; $$.bytes = 4; }
+    INTTYPE { $$.type = 0; $$.bytes = 4; }
     | FLOATTYPE { $$.type = 1; $$.bytes = 4; }
 	| DOUBLETYPE { $$.type = 2; $$.bytes = 8; }
 	| CHARTYPE { $$.type = 3; $$.bytes = 1; }
@@ -326,7 +326,7 @@ arreglo:
         /* Obtenemos el las dimenciones del arreglo hijo y le agregamos el de la actual
             dimensión. */
         if ($2.type != 0) {
-            yyerror("te pasaste de verga. mete tu entero!");
+            yyerror("El número para indexar en el arreglo debe ser entero.");
             exit(1);
         }
         $$.tam = $4.tam + 1;
@@ -416,8 +416,8 @@ funcs:
 		strcpy(c.op2, "");
 		strcpy(c.res, label2);
         insert_cuad(&codigo_intermedio, c);                
-	 } funcs 
-	 | %empty 
+     } funcs 
+     | %empty 
 ;
 
 /* Argumentos de las funciones.
@@ -748,187 +748,282 @@ parte_izq:
     | id dot id { strcpy($$.id1, $1); strcpy($$.id2, $3); $$.type = -1; }
 ;
 
+/* Reglas de producción para la parte izquierda de una asignación cuando es del tipo
+   var_arr -> id[exp] */
 var_arr:
-	   id lbracket exp rbracket { if($3.type != 0) { 
-                                    yyerror("debes indexar el arreglo con un entero.\n"); 
+       ID LBRACKET exp RBRACKET { 
+                                  // Verificando que se indexe el arreglo con una expresión de tipo entera.
+                                  if($3.type != 0) { 
+                                    yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
                                   }
-								  strcpy($$.representacion, $1);
-								  strcat($$.representacion, "[");
-								  strcat($$.representacion, $3.dir);
-								  strcat($$.representacion, "]");
+                                  // Formando la cadena que representa a la variable de arreglo indexada.
+                                  strcpy($$.representacion, $1);
+                                  strcat($$.representacion, "[");
+                                  strcat($$.representacion, $3.dir);
+                                  strcat($$.representacion, "]");
+                                  // Creando un nuevo nodo para iterar la pila de tablas maestras.
                                   struct nodo* it = stack_masterchefs;
+                                  // Recorremos la pila para buscar el identificador en ella.
                                   int encontrado = 0;
-                                  while(it != null) {
+                                  while(it != NULL) {
+                                    // Estamos buscando con el identificador en la tabla de símbolos a la que apunta el iterador.
                                     int x = search(it->tabla->st, $1); 
                                     if(x != -1) {
+                                        // Si ya la encontramos, podemos consultar el tipo en dicho renglón encontrado.
                                         encontrado = 1;
                                         int type_row = it->tabla->st->symbols[x].type;
                                         $$.type = it->tabla->tt->trs[type_row].base.renglon;
+                                        // En el ciclo seguiremos subiendo a partir de los tipos hasta llegar al de la base.
+                                        // Sin embargo, si en algún punto llegaos a ver un -1 es porque estamos indexando a un arreglo
+                                        // que fue declarado con un número menor de dimensiones y reportamos el error. 
                                         if($$.type == -1) {
-                                            yyerror("no seas pendejo. mayor cantidad de dimensiones que las definidas");
+                                            yyerror("Error: Mayor cantidad de dimensiones que las definidas.");
                                             exit(1);
                                         }
                                         break;
                                     }
                                     it = it->siguiente;
                                   }
+                                  // Si saliendo del ciclo ocurre que el identificador jamás fue encontrado, entonces
+                                  // no había sido declarado antes y reportamos el error.
                                   if(!encontrado) {
-                                    yyerror("el arreglo no fue declarado antes.\n");
+                                    yyerror("Error: El arreglo no fue declarado antes.\n");
+                                    exit(1);
+                                  }
+                                  // Especificando que la tabla de tipos del lado izquierdo es la tabla a la que apunta el iterador. 
+                                  $$.tt = it->tabla->tt; 
+       }  
+       | var_arr LBRACKET exp RBRACKET {
+                                  // Regla de producción recursiva para seguir metiendo indexaciones.
+                                  // Armando la representación de la indexación.
+                                  strcat($$.representacion, "[");
+                                  strcat($$.representacion, $3.dir);
+                                  strcat($$.representacion, "]");
+                                  // Checando que se indexe con una expresión de tipo entera.
+                                  if($3.type != 0) { 
+                                    yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
+                                  }
+                                  // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
+                                  if($1.type == -1) {
+                                    yyerror("Error: Mayor cantidad de dimensiones que las definidas");
                                     exit(1);
                                   } 
-                                  $$.tt = it->tabla->tt; }//valor   
-       | var_arr lbracket exp rbracket { 
-								  strcat($$.representacion, "[");
-								  strcat($$.representacion, $3.dir);
-								  strcat($$.representacion, "]");
-                                  if($3.type != 0) { 
-                                    yyerror("debes indexar el arreglo con un entero.\n"); 
-                                  }
-                                  if($1.type == -1) {
-                                    yyerror("no seas pendejo. mayor cantidad de dimensiones que las definidas");
-                                    exit(1);
-                                  }  
+                                  // Checando el tipo del rengón del varr_arr del cuerpo de la producción.
                                   int row_hijo = $1.type;
                                   $$.type = (*$1.tt).trs[row_hijo].base.renglon;
+                                  // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
                                   if($$.type == -1) {
-                                    yyerror("no seas pendejo. mayor cantidad de dimensiones que las definidas");
+                                    yyerror("Error: Mayor cantidad de dimensiones que las definidas");
                                     exit(1);
-                                  }  
+                                  } 
+                                  // La tabla de tipos de la cabecera es la del varr_arr del cuerpo.
                                   $$.tt = $1.tt;
-
        }
 ;
 
+/* Reglas de producción para las expresiones.
+   exp -> exp + exp | exp - exp | exp * exp | exp / exp | exp % exp | varr_arr | 
+          CADENA | numero | CARACTER | ID(params) */
 exp:
-   exp plus exp { $$ = suma($1, $3); printf("e -> e + e\n"); }  
-   | exp minus exp { $$ = resta($1, $3); printf("e -> e - e\n"); }  
-   | exp prod exp { $$ = multiplicacion($1, $3); printf("e -> e * e\n"); } 
-   | exp div exp { $$ = division($1, $3); printf("e -> e / e\n"); } 
-   | exp mod exp { $$ = modulo($1, $3); printf("e -> e mod e\n"); } 
-   | var_arr { $$ = envolver_varr($1); printf("e -> id[e]\n"); }
-   | id { $$ = identificador($1); printf("e->id\n"); printf("%s\n",$1); } 
-   | cadena { $$ = envolver_cadena($1); printf("e -> cadena\n"); }
-   | numero { $$ = get_numero($1); printf("e->numero\n"); printf("%s\n",$1.val); }
-   | caracter { $$ = envolver_caracter($1); printf("e -> caracter\n"); }
-   | id lpar params rpar {
-   		verifica_call($1, $3.lista_tipos, $3.count);	
-		char temp[32];
-		strcpy(temp, newtemp());
-		cuadrupla c;
-		c.op = call;
-		strcpy(c.op1, $1);
-		sprintf(c.op2, "%d", $3.count);
-		strcpy(c.res, temp);
-		insert_cuad(&codigo_intermedio, c);                    
-		strcpy($$.dir, temp);
-   }
+   exp PLUS exp { 
+                  $$ = suma($1, $3); 
+                  printf("E -> E + E\n"); 
+                }  
+   | exp MINUS exp { $$ = resta($1, $3); 
+                     printf("E -> E - E\n");
+                   }  
+   | exp PROD exp { 
+                    $$ = multiplicacion($1, $3); 
+                    printf("E -> E * E\n");
+                  } 
+   | exp DIV exp { 
+                   $$ = division($1, $3); 
+                   printf("E -> E / E\n");
+                 } 
+   | exp MOD exp { 
+                   $$ = modulo($1, $3); 
+                   printf("E -> E mod E\n");
+                 } 
+   | var_arr { 
+               $$ = envolver_varr($1); 
+               printf("E -> id[E]\n"); 
+             }
+   | ID { 
+          $$ = identificador($1); 
+          printf("E->id\n");
+          printf("%s\n", $1); 
+        } 
+   | CADENA { 
+              // Pasando la cadena de la expresión regular a un tipo expresión.
+              $$ = envolver_cadena($1); 
+              printf("E -> CADENA\n"); 
+            }
+   | numero { 
+              $$ = get_numero($1);
+              printf("E->numero\n");
+              printf("%s\n",$1.val);
+            }
+   | CARACTER { 
+                // Pasando el carácter de la expresión regular a un tipo expresión.
+                $$ = envolver_caracter($1); 
+                printf("E -> CARACTER\n");
+              }
+   | ID LPAR params RPAR {
+                            // Verificamos que la llama a la función sea válida 
+                            // de acuerdo a la lista de tipos con que fue declarada y los tipos de los
+                            // argumentos.
+                            verifica_call($1, $3.lista_tipos, $3.count);    
+                            char temp[32];
+                            strcpy(temp, newTemp());
+                            // Creando la cuadrupla para el código.
+                            cuadrupla c;
+                            // Es una llamada a función.
+                            c.op = CALL;
+                            strcpy(c.op1, $1);
+                            sprintf(c.op2, "%d", $3.count);
+                            strcpy(c.res, temp);
+                            insert_cuad(&codigo_intermedio, c);                    
+                            strcpy($$.dir, temp);
+                        }
 ;
 
+/* Reglas de producción para los parámetros.
+   params -> lista_param | ε */
 params:
-	  lista_param {
-	  		$$.p = $1.p;
-			int i;
-			for (i = 0; i < $1.count; i++) {
-				$$.lista_tipos[i] = $1.lista_tipos[i];
-			}
-			$$.count = $1.count;
-	  }
-	  | %empty { $$.p = 0; $$.count = 0; }
+      lista_param {
+            // El número de parámetros es el que carga la lista.
+            $$.p = $1.p;
+            // Copiamos los tipos parámetros de la lista de parámetros.
+            int i;
+            for (i = 0; i < $1.count; i++) {
+                $$.lista_tipos[i] = $1.lista_tipos[i];
+            }
+            // El número de parámetros son los de la lista de parámetros.
+            $$.count = $1.count;
+      }
+      | %empty {
+                // Si cae en este caso, el número de parámetros es cero. 
+                $$.p = 0; 
+                $$.count = 0;
+               }
 ;
 
+/* Reglas de producción para la lista de parámetros.
+   lista_param -> lista_param , exp | exp */
 lista_param:
-		   lista_param comma exp {
-				cuadrupla c;
-				c.op = param;
-				strcpy(c.op1, "");
-				strcpy(c.op2, "");
-				strcpy(c.res, $3.dir);
-				insert_cuad(&codigo_intermedio, c);                    
-				$$.p = $1.p + 1;
-				$$.lista_tipos[$1.count] = $3.type;
-				$$.count = $1.count + 1;
-		   }
-   		   | exp {
-				cuadrupla c;
-				c.op = param;
-				strcpy(c.op1, "");
-				strcpy(c.op2, "");
-				strcpy(c.res, $1.dir);
-				insert_cuad(&codigo_intermedio, c);                    
-				$$.p = 1;
-				$$.lista_tipos[0] = $1.type;
-				$$.count = 1;
-		   }
+           lista_param COMMA exp {
+                // Creando la cuadrupla e insertándola en el código intermedio.
+                cuadrupla c;
+                c.op = PARAM;
+                strcpy(c.op1, "");
+                strcpy(c.op2, "");
+                strcpy(c.res, $3.dir);
+                insert_cuad(&codigo_intermedio, c);  
+                // Incrementando la cantidad de argumentos y copiando el tipo del actual.                  
+                $$.p = $1.p + 1;
+                $$.lista_tipos[$1.count] = $3.type;
+                $$.count = $1.count + 1;
+           }
+           | exp {
+                // Creando la cuadrupla e insertándola en el código intermedio.
+                cuadrupla c;
+                c.op = PARAM;
+                strcpy(c.op1, "");
+                strcpy(c.op2, "");
+                strcpy(c.res, $1.dir);
+                insert_cuad(&codigo_intermedio, c);
+                // Como es el caso base, tenemos un solo argumento y su tipo es el tipo de la expresión.                    
+                $$.p = 1;
+                $$.lista_tipos[0] = $1.type;
+                $$.count = 1;
+           }
 ;
 
+/* Reglas de producción para las condiciones.
+   cond -> cond || cond | cond && cond | ! cond | ( cond ) | exp rel exp
+           | exp | true | false */
 cond:
-	cond or {
+    cond OR {
+        // Creación de la cuadrupla con la operación de label.
         cuadrupla c;
         c.op = label;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, get_first(&$1.falses));
+        // Inserción de la cuadrupla en el código intermedio.
         insert_cuad(&codigo_intermedio, c);                    
     } cond { 
         char label[32];
-        strcpy(label, newlabel());
+        strcpy(label, newLabel());
+        // Haciendo backpatch con la nueva etiqueta. 
         backpatch(&$1.falses, label, &codigo_intermedio);
         $$.trues = merge(&$1.trues, &$4.trues);
         $$.falses = $4.falses;
         printf("b -> b || b\n");
     }
-    | cond and {
+    | cond AND {
+        // Creación de la cuadrupla con la operación de label.
         cuadrupla c;
         c.op = label;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, get_first(&$1.trues));
+        // Inserción de la cuadrupla en el código intermedio.
         insert_cuad(&codigo_intermedio, c);                    
     } cond {
         char label[32];
         strcpy(label, newlabel());                        
         $$.falses = merge(&$1.falses, &$4.falses);
         $$.trues = $4.trues;
+        // Haciendo backpatch con la nueva etiqueta. 
         backpatch(&$1.trues, label, &codigo_intermedio);
         printf("b -> b && b\n");
     }
-    | not cond {
+    | NOT cond {
+        // Se invierten flases y trues.
         $$.falses = $2.trues;
         $$.trues = $2.falses;
         printf("b -> !b\n");
     }
-    | lpar cond rpar {
+    | LPAR cond RPAR {
+        // Dependen de los falses y trues de la condución del cuerpo.
         $$.trues = $2.trues;
         $$.falses = $2.falses;
-        //strcpy($$.dir, $2.dir);
-        printf("b->(b)\n");
+        printf("B->(B)\n");
     }
     | exp rel exp {
         char i[32];
         char i2[32];
         char temp[32];
-        strcpy(i, newindex());
-        strcpy(i2, newindex());
-        strcpy(temp, newtemp());
-        //strcpy($$.dir, temp);
+        // Crenado dos nuevos índices y un temporal.
+        strcpy(i, newIndex());
+        strcpy(i2, newIndex());
+        strcpy(temp, newTemp());
         $$.trues = create_list(i);
         $$.falses = create_list(i2);
+        
+        // Creando las cuadruplas.
         cuadrupla c, c1, c2;
+        
+        // Especificación de la primera cuadrupla.
         c.op = $2 ;
         strcpy(c.op1, $1.dir);
         strcpy(c.op2, $3.dir);
         strcpy(c.res, temp);            
         
-        c1.op = iff;
+        // Especificación de la segunda cuadrupla.
+        c1.op = IFF;
         strcpy(c1.op1, temp);
         strcpy(c1.op2, "goto");
         strcpy(c1.res, i);            
-        
-        c2.op = goto;
+            
+        // Especificación de la tercera cuadrupla.
+        c2.op = GOTO;
         strcpy(c2.op1, "");
         strcpy(c2.op2, "");
         strcpy(c2.res, i2);
         
+        // Insertando cuadruplas para el código intermedio.
         insert_cuad(&codigo_intermedio, c);
         insert_cuad(&codigo_intermedio, c1);
         insert_cuad(&codigo_intermedio, c2);
@@ -939,11 +1034,13 @@ cond:
         char i[32];
         strcpy(i, newindex());
         $$.trues = create_list(i);
+        // Creación de la cuadrupla y con la operación de goto.
         cuadrupla c;
         c.op = goto;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, i);
+        // Inserción de la cuadrupla.
         insert_cuad(&codigo_intermedio, c);
         printf("b->true\n");
     } 
@@ -951,273 +1048,487 @@ cond:
         char i[32];
         strcpy(i, newindex());
         $$.falses = create_list(i);
+        // Creación de la cuadrupla y con la operación de goto.
         cuadrupla c;
         c.op = goto;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, i);
+        // Inserción de la cuadrupla.
         insert_cuad(&codigo_intermedio, c);
         printf("b->false\n");
     } 
 ;
 
+/* Reglas de producción para los operadores relacionales.
+   rel -> < | > | >= | <= | != | == 
+   En cada caso basta con establecer el atributo númerico 
+   de la cabecera de la producción dependiendo del token devuelto. */
 rel:
-   lt { $$ = less_than; printf("r-> <\n"); }
-   | gt { $$ = greater_than; printf("r-> >\n"); }
-   | leq { $$ = less_or_equal_than; printf("r-> <=\n"); }
-   | geq { $$ = greater_or_equal_than; printf("r-> >=\n"); }
-   | neq { $$ = not_equals; printf("r-> !=\n"); }
-   | eq { $$ = equals; printf("r-> ==\n"); } 
+   LT { 
+        $$ = LESS_THAN; 
+        printf("R-> <\n"); 
+      }
+   | GT { 
+          $$ = GREATER_THAN; 
+          printf("R-> >\n");
+        }
+   | LEQ { 
+           $$ = LESS_OR_EQUAL_THAN; 
+           printf("R-> <=\n");
+         }
+   | GEQ { 
+           $$ = GREATER_OR_EQUAL_THAN; 
+           printf("R-> >=\n");
+         }
+   | NEQ { 
+           $$ = NOT_EQUALS;
+           printf("R-> !=\n"); 
+         }
+   | EQ { 
+          $$ = EQUALS; 
+          printf("R-> ==\n");
+        } 
 ;
-		
+        
 %%
 
+/**
+ * Inicializa la tabla maestra que tiene los apuntadores
+ * a una tabla de símbolos y a una de tipos.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 5 de diciembre de 2018.
+ */
 void init(){    
-	masterchef = (struct mastertab *) malloc(sizeof(struct mastertab));
-	masterchef->tt = (typetab *) malloc(sizeof(typetab));
-	masterchef->st = (symtab *) malloc(sizeof(symtab));
-	stack_masterchefs = (struct nodo*) malloc(sizeof(struct nodo));
-	stack_masterchefs = null;
+    // Reservando memoria dinámicamente para la tabla maestra y sus dos tablas.
+    masterchef = (struct mastertab *) malloc(sizeof(struct mastertab));
+    masterchef->tt = (typetab *) malloc(sizeof(typetab));
+    masterchef->st = (symtab *) malloc(sizeof(symtab));
+    stack_masterchefs = (struct nodo*) malloc(sizeof(struct nodo));
+    stack_masterchefs = NULL;
+    
+    // Creando las dos tablas que tendrá como apuntadores.
     create_table(masterchef->st);
     create_type_table(masterchef->tt);
 
-	stack_masterchefs = mete(stack_masterchefs, masterchef);
+    // Metiéndo la tabla maestra a la pila de las tablas maestras. 
+    // Esta que metemos es la tabla del alcance global.
+    stack_masterchefs = mete(stack_masterchefs, masterchef);
 
+    // Creamos el contenedor del código intermedio e inicializamos las labels para los falses.
     create_code(&codigo_intermedio);
     create_labels(&lfalses);    
 }
 
+/**
+ * Función que determina cuál de los dos tipos de los que se pasan 
+ * como parámetros (representador por enteros) es mayor que el otro.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 5 de diciembre de 2018.
+ */
 int max(int t1, int t2){
-	if( t1==t2) return t1;
-	if( t1 ==0 && t2 == 1) return 1;
-	if( t1 ==1 && t2 == 0) return 1;
-	if( t1 ==0 && t2 == 2) return 2;
-	if( t1 ==2 && t2 == 0) return 2;
-	if( t1 ==2 && t2 == 1) return 2;
-	if( t1 ==1 && t2 == 2) return 2;
-	else return -1;
+    // Basta con ir checando por casos y en cada tipo regresar el mayor.
+    // Esto se debe a que double > float > int y los enteros que los
+    // representan son respectivamente 2 > 1 > 0.
+    if( t1==t2) return t1;
+    if( t1 ==0 && t2 == 1) return 1;
+    if( t1 ==1 && t2 == 0) return 1;
+    if( t1 ==0 && t2 == 2) return 2;
+    if( t1 ==2 && t2 == 0) return 2;
+    if( t1 ==2 && t2 == 1) return 2;
+    if( t1 ==1 && t2 == 2) return 2;
+    // Si no cae en ninguno de los casos anteriores, regresamos -1.
+    else return -1;
 }
 
+/**
+ * Función que genera el código intermedio para la adición de dos
+ * números. Devuelve la expresión resultante de la suma de las dos expresiones
+ * que se pasan como parámetros.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 5 de diciembre de 2018.
+ */
 exp suma(exp e1, exp e2){
     exp e;
     cuadrupla c;
+    // El tipo de la expresión es el mayor de los dos tipos de las expresiones.
     e.type = max(e1.type, e2.type);
+    // Checando por errores de tipos.
     if( e.type==-1) yyerror("Error de tipos");
     else{
         char t[32];
         strcpy(t,newTemp());
         strcpy(e.dir, t);
+        // La operación de es suma.
         c.op = MAS;
+        // Realizando los casts necesarios en el código intermedio generado.
         strcpy(c.op1, ampliar(e1.dir, e1.type, e.type));
         strcpy(c.op2, ampliar(e2.dir, e2.type, e.type));
         strcpy(c.res, t);
+        // Insertando la cuadrupla en el código intermedio.
         insert_cuad(&codigo_intermedio, c);
     }
     return e;    
 }
 
+/**
+ * Función que genera el código intermedio para la sustracción de dos
+ * números. Devuelve la expresión resultante de la resta de las dos expresiones
+ * que se pasan como parámetros.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 5 de diciembre de 2018.
+ */
 exp resta(exp e1, exp e2){
     exp e;
     cuadrupla c;
     char t[32];
+    // El tipo de la expresión es el mayor de los dos tipos de las expresiones.
     e.type = max(e1.type, e2.type);
-    
+    // Checando por errores de tipos.
     if( e.type==-1) yyerror("Error de tipos");
     else{
         strcpy(t,newTemp());
         strcpy(e.dir, t);
+        // La operación de es resta.
         c.op = MENOS;
+        // Realizando los casts necesarios en el código intermedio generado.
         strcpy(c.op1, ampliar(e1.dir, e1.type, e.type));
         strcpy(c.op2, ampliar(e2.dir, e2.type, e.type));
         strcpy(c.res, t);
+        // Insertando la cuadrupla en el código intermedio.
         insert_cuad(&codigo_intermedio, c);
     }
     return e;    
 }
 
+/**
+ * Función que genera el código intermedio para el producto de dos
+ * números. Devuelve la expresión resultante de la multiplicación de las dos expresiones
+ * que se pasan como parámetros.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 5 de diciembre de 2018.
+ */
 exp multiplicacion(exp e1, exp e2){
     exp e;
     cuadrupla c;
+    // El tipo de la expresión es el mayor de los dos tipos de las expresiones.
     e.type = max(e1.type, e2.type);
+    // Checando por errores de tipos.
     if( e.type==-1) yyerror("Error de tipos");
     else{
         char t[32];
         strcpy(t,newTemp());
         strcpy(e.dir, t);
+        // La operación de es multiplicación.
         c.op = MULTIPLICACION;
+        // Realizando los casts necesarios en el código intermedio generado.
         strcpy(c.op1, ampliar(e1.dir, e1.type, e.type));
         strcpy(c.op2, ampliar(e2.dir, e2.type, e.type));
         strcpy(c.res, t);
+        // Insertando la cuadrupla en el código intermedio.
         insert_cuad(&codigo_intermedio, c);
     }
     return e;    
 }
 
+/**
+ * Función que genera el código intermedio para el cociente de dos
+ * números. Devuelve la expresión resultante de la división de las dos expresiones
+ * que se pasan como parámetros.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 5 de diciembre de 2018.
+ */
 exp division(exp e1, exp e2){
     exp e;
     cuadrupla c;
+    // El tipo de la expresión es el mayor de los dos tipos de las expresiones.
     e.type = max(e1.type, e2.type);
+    // Checando por errores de tipos.
     if( e.type==-1) yyerror("Error de tipos");
     else{
         char t[32];
         strcpy(t,newTemp());
         strcpy(e.dir, t);
+        // La operación de es división.
         c.op = DIVISION;
+        // Realizando los casts necesarios en el código intermedio generado.
         strcpy(c.op1, ampliar(e1.dir, e1.type, e.type));
         strcpy(c.op2, ampliar(e2.dir, e2.type, e.type));
         strcpy(c.res, t);
+        // Insertando la cuadrupla en el código intermedio.
         insert_cuad(&codigo_intermedio, c);
     }
     return e;    
 }
 
+/**
+ * Función que genera el código intermedio para el módulo de dos
+ * números. Devuelve la expresión resultante del módulo de las dos expresiones
+ * que se pasan como parámetros.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 5 de diciembre de 2018.
+ */
 exp modulo(exp e1, exp e2){
-	if(e1.type != 0 || e2.type != 0) {
-		yyerror("La operación módulo requiere operandos enteros.\n");
-		exit(1);
-	}
+    // Para hacer el módulo ambos tipos de las expresiones deben ser enteros.
+    if(e1.type != 0 || e2.type != 0) {
+        yyerror("Error: La operación módulo requiere operandos enteros.\n");
+        exit(1);
+    }
     exp e;
     cuadrupla c;
+    // El tipo de la expresión es el mayor de los dos tipos de las expresiones.
     e.type = max(e1.type, e2.type);
-	if( e.type==-1) yyerror("Error de tipos");
+    // Checando por errores de tipos.
+    if( e.type==-1) yyerror("Error de tipos");
     else{
         char t[32];
         strcpy(t,newTemp());
         strcpy(e.dir, t);
+        // La operación de es módulo.
         c.op = MODULO;
         strcpy(c.op1, ampliar(e1.dir, e1.type, e.type));
         strcpy(c.op2, ampliar(e2.dir, e2.type, e.type));
         strcpy(c.res, t);
+        // Insertando la cuadrupla en el código intermedio.
         insert_cuad(&codigo_intermedio, c);
     }
     return e;    
 }
 
+/**
+ * Función que busca un identificador en la tabla del tope de la pila
+ * de tablas maestras y si no lo encuentra lo busca también en la tabla
+ * de símbolos global. Esto sirve para las funciones.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 9 de diciembre de 2018.
+ */
 int get_tipo_tablas(char *id) {
-	int tipo;
-	int busqueda = search(stack_masterchefs->tabla->st, id);
-	if (busqueda == -1) {
-		busqueda = search(masterchef->st, id);
-		if (busqueda == -1) {
-			yyerror("El identificador para la variable no fue declarada antes.\n");
-			exit(1);
-		} else {	
-			tipo = get_type(masterchef->st, id);
-		}
-	} else {
-		tipo = get_type(stack_masterchefs->tabla->st, id);
-	}
-	return tipo;
+    int tipo;
+    // Buscándolo en la tabla de símbolos del tope.
+    int busqueda = search(stack_masterchefs->tabla->st, id);
+    if (busqueda == -1) {
+        // Si no lo encontramos lo buscamos en la global.
+        busqueda = search(masterchef->st, id);
+        if (busqueda == -1) {
+            // Si no está es porque no fue declarado antes.
+            yyerror("Error: El identificador para la variable no fue declarada antes.\n");
+            exit(1);
+        } else {    
+            // Si sí lo encontramos en la global, obtenemos su tipo.
+            tipo = get_type(masterchef->st, id);
+        }
+    } else {
+        // Si lo encontramos en la global, obtenemos su tipo.
+        tipo = get_type(stack_masterchefs->tabla->st, id);
+    }
+    return tipo;
 }
 
+/**
+ * Función que verifica que la llamada a una función sea válida.
+ * Checa que lo que se llama en efecto sea una función, tenga la 
+ * misma cantidad de parámetros que los argumentos con que fue 
+ * declarada y además los tipos de cada uno coincidan.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 9 de diciembre de 2018.
+ */
 void verifica_call(char id[], int params[], int params_count) {
-	int renglon = search(masterchef->st, id);
-	if (renglon == -1) {
-		yyerror("La funcion que quieres llamra no ha sido declarado\n");
-		exit(1);
-	}
-	if (masterchef->st->symbols[renglon].num_args != params_count) {
-		char error[1000];
-		strcpy(error, "El número de argumentos con la que fue llamada la función es incorrecto: ");
-		yyerror2(error, id);
-		exit(1);
-	}
-	for (int j = 0; j < params_count; j++) {
-		if (masterchef->st->symbols[renglon].args[j] != params[j]) {
-			char error[1000];
-			strcpy(error, "Los tipos de los argumentos que ingresaste no son correcto con la funcion: ");
-			yyerror2(error, id);
-			exit(1);
-		}
-	}
-	
+    // Buscando el renglón en la tabla de símbolos del identificador.
+    int renglon = search(masterchef->st, id);
+    if (renglon == -1) {
+        // Erroe en caso de que no sea encontrada.
+        yyerror("Error: La funcion que quieres llamar no ha sido declarado\n");
+        exit(1);
+    }
+    // Checando que sea llamda con el mismo número de argumentos con que fue declarada.
+    if (masterchef->st->symbols[renglon].num_args != params_count) {
+        char error[1000];
+        strcpy(error, "Error: El número de argumentos con la que fue llamada la función es incorrecto: ");
+        yyerror2(error, id);
+        exit(1);
+    }
+    // Checando que el tipo de los parámetros con que es llamda coincida con los de la declaración.
+    for (int j = 0; j < params_count; j++) {
+        if (masterchef->st->symbols[renglon].args[j] != params[j]) {
+            char error[1000];
+            strcpy(error, "Error: Los tipos de los argumentos que ingresaste no son correcto con la funcion: ");
+            yyerror2(error, id);
+            exit(1);
+        }
+    }
 }
 
+/**
+ * Función que sirve para generar y llevar a cabo la creación
+ * de código itermedio para una asignación del tipo parte_izq = exp . 
+ * Recibe como parámetros el identificador de la parte izquierda en dos partes
+ * (puede ser id . id y se reciben ambos), la expresión del lado derecho de la expresión
+ * y el entero que representa su tipo.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 10 de diciembre de 2018.
+ */
 exp asignacion(char *id, char *id2, exp e, int trecibido){
-	exp e1;
-	printf("asignaciooon\n");
-	e1.count_codigo = 0;
-	if(trecibido == -1) {
-		printf("moco\n");
-		int tipo;
-		int es_estruct = 0;
-		if(strcmp(id2, "") == 0) {
-			printf("id2 fue vacio\n");
-			tipo = get_tipo_tablas(id);
-			printf("%dtipin\n", tipo);
-		} else {
-			printf("pedro\n");
-			es_estruct = 1;
-			int renglon = search(masterchef->st, id);
-			if (renglon == -1) {
-				yyerror("El identificador no fue declarado\n");
-				exit(1);
-			}
-			typetab tabla_tipos_actual= (*masterchef->tt);
-			int tiene_struct = tabla_tipos_actual.trs[masterchef->st->symbols[renglon].type].base.renglon;
-			if(tiene_struct == -2) {
-				symtab *st_struct = tabla_tipos_actual.trs[stack_masterchefs->tabla->st->symbols[renglon].type].base.smt->st;
-				int renglon2 = search(st_struct, id2);
-				if (renglon2 == -1) {
-					st_struct = tabla_tipos_actual.trs[masterchef->st->symbols[renglon].type].base.smt->st;
-					renglon2 = search(st_struct, id2);
-					if(renglon2 == -1) {
-						yyerror("El struct no fue declarado\n");
-						exit(1);
-					}
-				}
-				tipo = get_type(st_struct, id2);
-			} else {
-				yyerror2("Intento de acceso a atributo de no estructura: ", id);
-				exit(1);
-			}
-		}
-
-		if( tipo != -1){        
-			printf("ichi\n");
-			e1.type = e.type;
-			printf("dlkeldkelkdlek\n");
-			strcpy(e1.dir, id);
-			printf("dlkeldkelkdlek\n");
-			cuadrupla c;
-			c.op = ASSIGNATION;
-			printf("o\n");
-			printf("%s %d %d\n", e.dir, tipo, e.type);
-			strcpy(c.op1, reducir(e.dir, tipo, e.type));
-			printf("o\n");
-			strcpy(c.op2, "");
-			if(es_estruct == 1) {
-				char id_con_punto[65];
-				strcpy(id_con_punto, id);
-				strcat(id_con_punto, ".");
-				strcat(id_con_punto, id2);
-				strcpy(c.res, id_con_punto);
-			} else {
-				printf("llega\n");
-				strcpy(c.res, id);
-			}
-			//insert_cuad(&codigo_intermedio, c);  
-			e1.arr_codigo[e1.count_codigo] = c;	
-			e1.count_codigo++;
-		}else{
-			yyerror("El identificador no fue declarado\n");
-			exit(1);
-		}
-	} else {
-		// VARARR
-		e1.type = e.type;
-		strcpy(e1.dir, id);
-		cuadrupla c;
-		c.op = ASSIGNATION;
-		strcpy(c.op1, reducir(e.dir, trecibido, e.type));
-		strcpy(c.op2, "");
-		strcpy(c.res, id);//en este caso id es la representacin de vararr
-		//insert_cuad(&codigo_intermedio, c);  
-		e1.arr_codigo[e1.count_codigo] = c;
-		e1.count_codigo++;}
-		return e1;
+    // La expresión que será devuelta.
+    exp e1;
+    e1.count_codigo = 0;
+    // Cuando no es un var_arr:
+    if(trecibido == -1) {
+        int tipo;
+        int es_estruct = 0;
+        // Si no es de la forma id.id, el segundo id es vacío y podemos obtener el tipo del primero.
+        if(strcmp(id2, "") == 0) {
+            tipo = get_tipo_tablas(id);
+        } else {
+            // En otro caso, es de la forma id.id, entonces debemos buscar el primer identificador.
+            es_estruct = 1;
+            // Buscamos el id antes del punto en la tabla de símbolos para saber si fue declarado antes.
+            int renglon = search(masterchef->st, id);
+            if (renglon == -1) {
+                yyerror("Error: El identificador no fue declarado\n");
+                exit(1);
+            }
+            // Tenemos la tabla de tipos global.
+            typetab tabla_tipos_actual= (*masterchef->tt);
+            // Vemos si es de tipo struct la variable para poder hacer lo de id.id.
+            int tiene_struct = tabla_tipos_actual.trs[masterchef->st->symbols[renglon].type].base.renglon;
+            // Si sí tiene:
+            if(tiene_struct == -2) {
+                symtab *st_struct = tabla_tipos_actual.trs[stack_masterchefs->tabla->st->symbols[renglon].type].base.smt->st;
+                // Buscando lo que hay después del punto en id.id.
+                int renglon2 = search(st_struct, id2);
+                if (renglon2 == -1) {
+                    // Si no lo encontramos, tenemos que buscar en la global.
+                    st_struct = tabla_tipos_actual.trs[masterchef->st->symbols[renglon].type].base.smt->st;
+                    renglon2 = search(st_struct, id2);
+                    // En este caso la estructura así antes.
+                    if(renglon2 == -1) {
+                        yyerror("Error: El struct no fue declarado como lo usaste.\n");
+                        exit(1);
+                    }
+                }
+                tipo = get_type(st_struct, id2);
+                // En el caso contrario hay un error semántico.
+            } else {
+                yyerror2("Error: Intento de acceso a atributo de no estructura: ", id);
+                exit(1);
+            }
+        }
+        if( tipo != -1){        
+            // El tipo de la expresión a devolver es el de la expresión luego de la asignación.
+            e1.type = e.type;
+            strcpy(e1.dir, id);
+            // Creando la cuadrupla para la asignación y colocando la operación.
+            cuadrupla c;
+            c.op = ASSIGNATION;
+            printf("%s %d %d\n", e.dir, tipo, e.type);
+            // Colocando lo necesario de la cuadrupla.
+            strcpy(c.op1, reducir(e.dir, tipo, e.type));
+            strcpy(c.op2, "");
+            if(es_estruct == 1) {
+                char id_con_punto[65];
+                strcpy(id_con_punto, id);
+                strcat(id_con_punto, ".");
+                strcat(id_con_punto, id2);
+                strcpy(c.res, id_con_punto);
+            } else {
+                strcpy(c.res, id);
+            }
+            // Colocando lo respectivo al código a la expresión.
+            e1.arr_codigo[e1.count_codigo] = c; 
+            e1.count_codigo++;
+        } else{
+            // Caso para el error semántico.
+            yyerror("Error: El identificador no fue declarado\n");
+            exit(1);
+        }
+    } else {        // Aquí se maneja el caso para var_arr.
+        e1.type = e.type;
+        strcpy(e1.dir, id);
+        // Crando la cuadrupla.
+        cuadrupla c;
+        c.op = ASSIGNATION;
+        strcpy(c.op1, reducir(e.dir, trecibido, e.type));
+        strcpy(c.op2, "");
+        // En este caso id es la representacin de var_arr.
+        strcpy(c.res, id);
+        // Asociando lo respectivo al código a la expresión.
+        e1.arr_codigo[e1.count_codigo] = c;
+        e1.count_codigo++;}
+        return e1;
 }
 
+/**
+ * Función que copia el valor del número a la dirección de una
+ * expresión creada.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 4 de diciembre de 2018.
+ */
 exp get_numero(numero n){
     exp e;
     e.type = n.type;
@@ -1225,6 +1536,18 @@ exp get_numero(numero n){
     return e;
 }
 
+/**
+ * Función que copia el valor de una cadena en la dirección
+ * de una nueva expresión que es creada.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 4 de diciembre de 2018.
+ */
 exp envolver_cadena(cadena cadenita) {
     exp e;
     e.type = cadenita.type;
@@ -1232,6 +1555,18 @@ exp envolver_cadena(cadena cadenita) {
     return e;
 }
 
+/**
+ * Función que copia el valor de una carácter en la dirección
+ * de una nueva expresión que es creada.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 4 de diciembre de 2018.
+ */
 exp envolver_caracter(caracter caractercito) {
     exp e;
     e.type = caractercito.type;
@@ -1239,6 +1574,18 @@ exp envolver_caracter(caracter caractercito) {
     return e;
 }
 
+/**
+ * Función que copia la representación de un arreglo
+ * en la dirección de una expresión que es creada.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 4 de diciembre de 2018.
+ */
 exp envolver_varr(varr arreglito) {
     exp e;
     e.type = arreglito.type;
@@ -1246,99 +1593,162 @@ exp envolver_varr(varr arreglito) {
     return e;
 }
 
+/**
+ * Función que copia el id en la dirección de una 
+ * nueva expresión creada que al final devuelta.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 6 de diciembre de 2018.
+ */
 exp identificador(char *id){
     exp e;
+    // Buscamos el identificador en la tabla de símbolos del tipo de la pila.
     if(search(stack_masterchefs->tabla->st, id) !=-1){
+        // Si lo encontramos, podemos copiar su valor en la dirección de la expresión.
         e.type = get_type(stack_masterchefs->tabla->st, id);
         strcpy(e.dir, id);
     }else{
-    	if(search(masterchef->st, id) !=-1){
-         	e.type = get_type(masterchef->st, id);
-        	strcpy(e.dir, id);
+        // En otro caso buscamos el identificador en la tabla global.
+        if(search(masterchef->st, id) !=-1){
+            // Si ya lo encontramos, copiamos su valor en el dirección de la expresión.
+            e.type = get_type(masterchef->st, id);
+            strcpy(e.dir, id);
         } else {
-        	yyerror("Error semantico: el identificador no existe");
-    		exit(1);
-    	}
+            // Si no, entonces error porque no fue declarada antes.
+            yyerror("Error: el identificador no existe");
+            exit(1);
+        }
     }
     return e;
 }
 
+/**
+ * Función que genera el código intermedio
+ * para los casts necesarios para lost tipos.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 6 de diciembre de 2018.
+ */
 char *ampliar(char *dir, int t1, int t2){
     cuadrupla c;
     char *t= (char*) malloc(32*sizeof(char));
-    
     if( t1==t2) return dir;
+    // Cast de entero a float.
     if( t1 ==0 && t2 == 1){
         c.op = EQ;
         strcpy(c.op1, "(float)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
         strcpy(c.res, t);
+        // Insertando la cuadrupla en el código intermedio.
         insert_cuad(&codigo_intermedio, c);
         return t;
-    }        
+    }
+    // Cast de entero a double.
     if( t1 ==0 && t2 == 2){
         c.op = EQ;
         strcpy(c.op1, "(double)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
         strcpy(c.res, t);
+        // Insertando la cuadrupla en el código intermedio.
         insert_cuad(&codigo_intermedio, c);
         return t;
     }        
-    
+    // Cast de float a double.
     if( t1 ==1 && t2 == 2) {
         c.op = EQ;
         strcpy(c.op1, "(double)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
         strcpy(c.res, t);
+        // Insertando la cuadrupla en el código intermedio.
         insert_cuad(&codigo_intermedio, c);
         return t;
     }            
 }
 
+/**
+ * Función que genera el código intermedio
+ * para los casts necesarios para lost tipos, cuando
+ * el cast es a uno menor.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 6 de diciembre de 2018.
+ */
 char *reducir(char *dir, int t1, int t2){
     cuadrupla c;
     char *t= (char*) malloc(32*sizeof(char));
-    
     if( t1==t2) return dir;
+    // Cast de float a int.
     if( t1 ==0 && t2 == 1){
         c.op = EQ;
         strcpy(c.op1, "(int)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
         strcpy(c.res, t);
+        // Insertando la cuadrupla.
         insert_cuad(&codigo_intermedio, c);
         printf("perdida de información se esta asignando un float a un int\n");
         return t;
-    }        
+    }
+    // Cast de double a int.
     if( t1 ==0 && t2 == 2){
         c.op = EQ;
         strcpy(c.op1, "(int)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
         strcpy(c.res, t);
+        // Insertando la cuadrupla.
         insert_cuad(&codigo_intermedio, c);
         printf("perdida de información se esta asignando un double a un int\n");
         return t;
     }        
+    // Cast de double a float.
     if( t1 ==1 && t2 == 2) {
         c.op = EQ;
         strcpy(c.op1, "(float)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
         strcpy(c.res, t);
+        // Insertando la cuadrupla.
         insert_cuad(&codigo_intermedio, c);
         printf("perdida de información se esta asignando un double a un float\n");
         return t;
-    }            
-	printf("Asignacion inconsistente krnal\n");
-	exit(1);
-	//faltan casos inconsistentes chars vs numeros vs arrays
+    }
+    // En otro caso hay un error semántico.  
+    printf("Error: Asignacion inconsistente de tipos.\n");
+    exit(1);
 }
 
+/**
+ * Función que crea un nuevo tempora.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 7 de diciembre de 2018.
+ */
 char* newTemp(){
+    // Reservando memoria dinámicamente para el temporal.
     char *temporal= (char*) malloc(32*sizeof(char));
     strcpy(temporal , "t");
     char num[30];
@@ -1348,7 +1758,19 @@ char* newTemp(){
     return temporal;
 }
 
+/**
+ * Función que crea un nueva etiqueta.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 7 de diciembre de 2018.
+ */
 char* newLabel(){
+    // Reservando memoria dinámicamente para la etiqueta.
     char *temporal= (char*) malloc(32*sizeof(char));
     strcpy(temporal , "L");
     char num[30];
@@ -1358,7 +1780,19 @@ char* newLabel(){
     return temporal;
 }
 
+/**
+ * Función que crea un nuevo índice.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 7 de diciembre de 2018.
+ */
 char* newIndex(){
+    // Reservando memoria dinámicamente para la cadena del índice.
     char *temporal= (char*) malloc(32*sizeof(char));
     strcpy(temporal , "I");
     char num[30];
@@ -1368,33 +1802,78 @@ char* newIndex(){
     return temporal;
 }
 
+/**
+ * Función que imprime los mensajes de error.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 4 de diciembre de 2018.
+ */
 void yyerror(char *msg) {
-	printf("%s\n", msg);
+    printf("%s\n", msg);
 }
 
+/**
+ * Función que concatena dos cadenas que serán 
+ * impresas como el mensaje de error.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 4 de diciembre de 2018.
+ */
 void yyerror2(char *c, char *c2){
     strcat(c, c2);
-	yyerror(c);
+    yyerror(c);
 }
 
+/**
+ * Función que imprime el código intermedio
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 6 de diciembre de 2018.
+ */
 void finish(){    
     print_code(&codigo_intermedio);    
 }
 
+/**
+ * Función que itera tantas veces como indica el segundo 
+ * parámetro de la función y va metiendo el contenido
+ * de la cuadrúpla dada como parámetro en el código intermedio.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 6 de diciembre de 2018.
+ */
 void meter_assign(cuadrupla c[], int cou){
-	for(int j = 0; j < cou; j++){
-		insert_cuad(&codigo_intermedio, c[j]);
-		printf("metemos ass\n");
-		printf("%s, %s, %s, %d", c[j].op1, c[j].op2, c[j].res, c[j].op);
-	}
+    for(int j = 0; j < cou; j++){
+        insert_cuad(&codigo_intermedio, c[j]);
+        printf("metemos ass\n");
+        printf("%s, %s, %s, %d", c[j].op1, c[j].op2, c[j].res, c[j].op);
+    }
 }
 
 int main(int argc, char **argv) {
-	yyin = fopen(argv[1], "r");
-	//int a = yylex();
-	//	printf("<<<<<%d\n", a);
-	int result = yyparse();
-	printf("resultado del analisis: %d\n", result);
-	fclose(yyin);
-	return 0;
+    yyin = fopen(argv[1], "r");
+    int result = yyparse();
+    printf("resultado del analisis: %d\n", result);
+    fclose(yyin);
+    return 0;
 }
