@@ -306,23 +306,23 @@ lista:
    Aquí es desde donde se guarda el tipo del número hasta llegar a exp. También se
    define el valor de este número en cadena. */
 numero:
-	signo int { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
-	| signo double { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
-	| signo float { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
+	signo INT { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
+	| signo DOUBLE { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
+	| signo FLOAT { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
 ;
 
 /* Los signos de los números
    signo -> plus | minus | ɛ */
 signo: 
-	 plus { strcpy($$,""); }
-	 | minus { strcpy($$, "-"); }
+	 PLUS { strcpy($$,""); }
+	 | MINUS { strcpy($$, "-"); }
 	 | %empty { strcpy($$,""); }
 ;
 
 /* Aquí se definen las dimensiones de los arreglos.
    arreglo -> [numero] arreglo | ɛ */
 arreglo:
-    lbracket numero rbracket arreglo {
+    LBRACKET numero RBRACKET arreglo {
         /* Obtenemos el las dimenciones del arreglo hijo y le agregamos el de la actual
             dimensión. */
         if ($2.type != 0) {
@@ -348,7 +348,7 @@ arreglo:
    funcs -> func tipo id (args) { decls sents } funcs | ɛ
    Se agrega la función a la tabla de simbolos global con sus argumentos */
 funcs:
-	 func tipo id {
+	 FUNC tipo ID {
 	    /* Creamos el mastertab de la función y la agregamos a la pila de mastertabs
 	       ya que decls agrega sus declaraciones al tope de la pila y queremos que se agreguen
 	       al mastertab de la función. */
@@ -360,7 +360,7 @@ funcs:
 		stack_masterchefs = mete(stack_masterchefs, ntab);
 		current_function_type = $2.type;
 	 }
-	 lpar args rpar {
+	 LPAR args RPAR {
 	    /* Agregamos una etiqueta que nos diga donde está el código de la función. */
 		cuadrupla c;
 		c.op = label;
@@ -383,7 +383,7 @@ funcs:
 		s.num_args = $6.num;
 		insert(masterchef->st, s);
 	 }
-	 lcurlyb decls sents {
+	 LCURLYB decls sents {
 	    /* Aquí se hace backpatch para que se actualicen las etiquetas. */
         cuadrupla c;
         char label[32];
@@ -395,7 +395,7 @@ funcs:
         strcpy(label, newlabel());                                                
         backpatch(&$11, label, &codigo_intermedio);
 	 }
-	 rcurlyb {
+	 RCURLYB {
 		struct mastertab* sacada;
 		sacada = tope(stack_masterchefs); 
 		stack_masterchefs = saca(stack_masterchefs);
@@ -436,7 +436,7 @@ args:
 /* Lista de argumentos de las funciones.
    lista_args -> lista_args, tipo id parte_arr | tipo id parte_arr */
 lista_args:
-    lista_args comma tipo id parte_arr  {
+    lista_args COMMA tipo ID parte_arr  {
         /* Agregamos a la tabla de simbolos y tipos el argumento de la función */
         typerow renglon;
         renglon.type = $3.type;
@@ -458,7 +458,7 @@ lista_args:
         }
         $$.lista_args[$$.num-1] = $3.type;
         } 
-        | tipo id parte_arr {
+        | tipo ID parte_arr {
         /* Ponemos los casos base de la lista de argumentos y del número de argumentos */
         $$.num = 1;
         $$.lista_args[0] = $1.type;
@@ -486,7 +486,7 @@ lista_args:
 /* La parte que hace que una variable sea un arreglo
    parte_arr -> [] parte_arr | ɛ */
 parte_arr:
-        lbracket rbracket parte_arr 
+        LBRACKET RBRACKET parte_arr 
         | %empty 
 ;
 
@@ -533,7 +533,7 @@ sents:
          | print exp;
          | assign;     */
 sent:
-	if lpar cond rpar {
+	IF LPAR cond RPAR {
 	    /* Obtenemos la etiqueta que está en el tope de trues de la condición y la agregamos
 	       a nuestro código */
         cuadrupla c;
@@ -571,7 +571,7 @@ sent:
             printf("s->if(b)s else s\n");
         }
     }
-    | while  lpar cond rpar { breakeablecitos += 1; } sent {
+    | WHILE LPAR cond RPAR { breakeablecitos += 1; } sent {
         /* Creamos nuevas etiquetas que las agregaremos a los trues y falses de cond.  */
         char label[32], label2[32], temp[32];
         strcpy(label, newindex());                
@@ -590,7 +590,7 @@ sent:
         printf("s->while(b)s\n");
 		breakeablecitos -= 1;
     }
-    | do { breakeablecitos += 1; } sent while lpar cond rpar semicolon {
+    | DO { breakeablecitos += 1; } sent WHILE LPAR cond RPAR SEMICOLON {
         /* Muy parecido al while */
 		char label[32], label2[32], temp[32];
         strcpy(label, newindex());                
@@ -611,7 +611,7 @@ sent:
         printf("s->do s while(b)\n");
 		breakeablecitos -= 1;
 	}
-    | for lpar assign semicolon cond semicolon assign rpar { breakeablecitos += 1; } sent {
+    | FOR LPAR assign SEMICOLON cond SEMICOLON assign RPAR { breakeablecitos += 1; } sent {
         /* Muy parecido al while */
 		meter_assign($3.arr_codigo, $3.count_codigo);
         char label[32], label2[32], temp[32];
@@ -630,11 +630,11 @@ sent:
         printf("s->for(ass; cond; ass) sent\n");
 		breakeablecitos -= 1;
     }
-	| assign semicolon {
+	| assign SEMICOLON {
 	    /* meter_assign ya hace todo el trabajo */
 	    meter_assign($1.arr_codigo, $1.count_codigo);
 	}
-	| return exp semicolon {
+	| RETURN exp SEMICOLON {
         /* Verificamos el tipo de retorno con el de la función */
         if($2.type != current_function_type) {
             yyerror("tipo de retorno distinto al tipo de la funcion \n");
@@ -651,14 +651,14 @@ sent:
         insert_cuad(&codigo_intermedio, c1);
 	
 	}
-	| return semicolon {
+	| RETURN semicolon {
         /* Verificamos que el tipo de la función sea void */
         if(4 != current_function_type) {
             yyerror("tipo de retorno void distinto al tipo de la funcion \n");
             exit(1);
         }
     }
-	| lcurlyb sents rcurlyb {
+	| LCURLYB sents RCURLYB {
         /* Aquí es donde se hace la concatenación de sentencias */
         char label[32];
         $$ = $2;                
@@ -667,8 +667,8 @@ sent:
         backpatch(&$2, label, &codigo_intermedio);                                
         printf("s->{ss}\n");
     }  
-	| switch lpar exp rpar lcurlyb casos rcurlyb 
-	| break semicolon {
+	| SWITCH LPAR exp RPAR LCURLYB casos RCURLYB 
+	| BREAK SEMICOLON {
         /* Verificamos que el break sea dentro de un break */
 	    if(breakeablecitos < 1) {
             yyerror("el break debe estar dentro de un ciclo \n");
@@ -684,7 +684,7 @@ sent:
         insert_cuad(&codigo_intermedio, c1);
 
 	}
-    | print exp semicolon {
+    | PRINT exp SEMICOLON {
         char i[32];
         strcpy(i, newindex());
         $$ = create_list(i);
@@ -695,7 +695,7 @@ sent:
 /* Asignaciones
    assign -> parte_izq assig exp */
 assign: 
-    parte_izq assig exp {
+    parte_izq ASSIG exp {
         char i[32];
         strcpy(i, newindex());
         $$ = create_list(i);
@@ -713,7 +713,7 @@ assign:
    sentp -> ɛ | else sent */
 sentp:
 	{ /* Decimos que no tenemos un else */ $$.ifelse= false;} %prec ifx
-	| else {        
+	| ELSE {        
 	    /* Agregamos la etiqueta que tenemos en los falses al código*/
         cuadrupla c1;
         c1.op = label;
@@ -732,8 +732,8 @@ sentp:
 /* Casos que maneja el switch.
    sentp -> case numero sent casos | default sent | ɛ  */
 casos:
-    case numero sent casos 
-    | default sent 
+    CASE numero sent casos 
+    | DEFAULT sent 
     | %empty 
 ;
 
@@ -743,9 +743,9 @@ casos:
    el atributo dentro de un struct) y el tipo que es una referencia a si tenemos el
    tipo dentro de var_arr o no */
 parte_izq:
-    id { strcpy($$.id1, $1); strcpy($$.id2,""); $$.type = -1; }
+    ID { strcpy($$.id1, $1); strcpy($$.id2,""); $$.type = -1; }
     | var_arr  { strcpy($$.id1, $1.representacion); $$.type = $1.type; }
-    | id dot id { strcpy($$.id1, $1); strcpy($$.id2, $3); $$.type = -1; }
+    | ID DOT ID { strcpy($$.id1, $1); strcpy($$.id2, $3); $$.type = -1; }
 ;
 
 /* Reglas de producción para la parte izquierda de una asignación cuando es del tipo
