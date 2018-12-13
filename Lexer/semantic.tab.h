@@ -1,14 +1,13 @@
-/* A Bison parser, made by GNU Bison 2.3.  */
+/* A Bison parser, made by GNU Bison 3.0.4.  */
 
-/* Skeleton interface for Bison's Yacc-like parsers in C
+/* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
-   Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +15,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -33,127 +30,83 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/* Tokens.  */
+#ifndef YY_YY_SEMANTIC_TAB_H_INCLUDED
+# define YY_YY_SEMANTIC_TAB_H_INCLUDED
+/* Debug traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int yydebug;
+#endif
+
+/* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-      know about them.  */
-   enum yytokentype {
-     END = 258,
-     INTTYPE = 259,
-     FLOATTYPE = 260,
-     DOUBLETYPE = 261,
-     CHARTYPE = 262,
-     VOID = 263,
-     FUNC = 264,
-     STRUCT = 265,
-     LCURLYB = 266,
-     RCURLYB = 267,
-     LBRACKET = 268,
-     RBRACKET = 269,
-     SEMICOLON = 270,
-     DOT = 271,
-     TRUE = 272,
-     FALSE = 273,
-     IF = 274,
-     ELSE = 275,
-     WHILE = 276,
-     DO = 277,
-     SWITCH = 278,
-     CASE = 279,
-     DEFAULT = 280,
-     BREAK = 281,
-     PRINT = 282,
-     ID = 283,
-     INT = 284,
-     DOUBLE = 285,
-     FLOAT = 286,
-     CADENA = 287,
-     CARACTER = 288,
-     COMMA = 289,
-     RETURN = 290,
-     FOR = 291,
-     ASSIG = 292,
-     OR = 293,
-     AND = 294,
-     NEQ = 295,
-     EQ = 296,
-     GEQ = 297,
-     GT = 298,
-     LEQ = 299,
-     LT = 300,
-     MINUS = 301,
-     PLUS = 302,
-     MOD = 303,
-     DIV = 304,
-     PROD = 305,
-     NOT = 306,
-     RPAR = 307,
-     LPAR = 308,
-     IFX = 309
-   };
+  enum yytokentype
+  {
+    END = 258,
+    INTTYPE = 259,
+    FLOATTYPE = 260,
+    DOUBLETYPE = 261,
+    CHARTYPE = 262,
+    VOID = 263,
+    FUNC = 264,
+    STRUCT = 265,
+    LCURLYB = 266,
+    RCURLYB = 267,
+    LBRACKET = 268,
+    RBRACKET = 269,
+    SEMICOLON = 270,
+    DOT = 271,
+    TRUE = 272,
+    FALSE = 273,
+    IF = 274,
+    ELSE = 275,
+    WHILE = 276,
+    DO = 277,
+    SWITCH = 278,
+    CASE = 279,
+    DEFAULT = 280,
+    BREAK = 281,
+    PRINT = 282,
+    ID = 283,
+    INT = 284,
+    DOUBLE = 285,
+    FLOAT = 286,
+    CADENA = 287,
+    CARACTER = 288,
+    COMMA = 289,
+    RETURN = 290,
+    FOR = 291,
+    ASSIG = 292,
+    OR = 293,
+    AND = 294,
+    EQ = 295,
+    NEQ = 296,
+    GT = 297,
+    GEQ = 298,
+    LT = 299,
+    LEQ = 300,
+    PLUS = 301,
+    MINUS = 302,
+    PROD = 303,
+    DIV = 304,
+    MOD = 305,
+    NOT = 306,
+    LPAR = 307,
+    RPAR = 308,
+    IFX = 309
+  };
 #endif
-/* Tokens.  */
-#define END 258
-#define INTTYPE 259
-#define FLOATTYPE 260
-#define DOUBLETYPE 261
-#define CHARTYPE 262
-#define VOID 263
-#define FUNC 264
-#define STRUCT 265
-#define LCURLYB 266
-#define RCURLYB 267
-#define LBRACKET 268
-#define RBRACKET 269
-#define SEMICOLON 270
-#define DOT 271
-#define TRUE 272
-#define FALSE 273
-#define IF 274
-#define ELSE 275
-#define WHILE 276
-#define DO 277
-#define SWITCH 278
-#define CASE 279
-#define DEFAULT 280
-#define BREAK 281
-#define PRINT 282
-#define ID 283
-#define INT 284
-#define DOUBLE 285
-#define FLOAT 286
-#define CADENA 287
-#define CARACTER 288
-#define COMMA 289
-#define RETURN 290
-#define FOR 291
-#define ASSIG 292
-#define OR 293
-#define AND 294
-#define NEQ 295
-#define EQ 296
-#define GEQ 297
-#define GT 298
-#define LEQ 299
-#define LT 300
-#define MINUS 301
-#define PLUS 302
-#define MOD 303
-#define DIV 304
-#define PROD 305
-#define NOT 306
-#define RPAR 307
-#define LPAR 308
-#define IFX 309
 
-
-
-
+/* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE
-#line 102 "semantic.y"
+
+union YYSTYPE
 {
+#line 107 "semantic.y" /* yacc.c:1909  */
+
     struct {
         int cantidad;
     } cant;
@@ -176,21 +129,26 @@ typedef union YYSTYPE
         labels siguientes;
         int ifelse;
     } siguientesp;
+    int dims;
     int rel;
     char char_signo[1];
     struct {
         int p;
-        int lista_tipos[100];
+        int lista_tipos[100][2];
         int count;
     } parrams;
-}
-/* Line 1529 of yacc.c.  */
-#line 189 "semantic.tab.h"
-	YYSTYPE;
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
-# define YYSTYPE_IS_DECLARED 1
+
+#line 142 "semantic.tab.h" /* yacc.c:1909  */
+};
+
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
+# define YYSTYPE_IS_DECLARED 1
 #endif
+
 
 extern YYSTYPE yylval;
 
+int yyparse (void);
+
+#endif /* !YY_YY_SEMANTIC_TAB_H_INCLUDED  */

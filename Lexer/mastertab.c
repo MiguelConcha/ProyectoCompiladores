@@ -79,7 +79,7 @@ void print_table(symtab* st){
     // Encabezado para la impresión.
     printf("POS\tID\tTIPO\tDIR\tVAR\tARGS\n");    
     for(i=0; i < st->count; i++){
-		char rep[st->symbols[i].num_args];
+		char rep[st->symbols[i].num_args+1000];
 		strcpy(rep, "");
         // Obteniendo la representación de los argumentos.
         // Si no se cuenta, imprime una línea en blanco.
@@ -88,8 +88,8 @@ void print_table(symtab* st){
 			strcpy(rep, "---");
 		} else {
 			for(int j = 0; j < st->symbols[i].num_args;j++){
-				char tmp[21];
-				sprintf(tmp, "%s", map_type(st->symbols[i].args[j]));
+				char tmp[100];
+				sprintf(tmp, "(%s,%d)", map_type(st->symbols[i].args[j][0]), st->symbols[i].args[j][1]);
 				strcat(rep, tmp);
 				strcat(rep, " ");
 			}

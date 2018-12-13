@@ -1,83 +1,88 @@
 /* 
  * Archivo: semantic.y
  * Authors: Concha Vázquez Miguel
- * 			Flores Martínez Andrés
- * 			Gladín García Ángel Iván
- *  		Sánchez Pérez Pedro Juan Salvador
- *			Vázquez Salcedo Eduardo Eder
- * 			
+ *             Flores Martínez Andrés
+ *             Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *            Vázquez Salcedo Eduardo Eder
+ *             
  * Creado el 12 de diciembre de 2018.
  */
 
 %{
-	#include <stdio.h>
-	#include <stdlib.h>
-	#include <stdbool.h>
-	#include <string.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <stdbool.h>
+    #include <string.h>
 
     /* Atributos utilizados en los tokens y en los no terminales */
-	#include "attributes.h"
-	/* Tablas de tipos y símbolos */
-	#include "mastertab.h"
-	/* Backpatch */
-	#include "backpatch.h"
-	/* Código intermedio */
-	#include "intermediate_code.h"
-	/* Para las pilas de mastertabs */
-	#include "pila.h"
+    #include "attributes.h"
+    /* Tablas de tipos y símbolos */
+    #include "mastertab.h"
+    /* Backpatch */
+    #include "backpatch.h"
+    /* Código intermedio */
+    #include "intermediate_code.h"
+    /* Para las pilas de mastertabs */
+    #include "pila.h"
 
     /* Variables que heredamos del analizador léxico. */
-	extern int yylex();
-	extern int yylineno;
-	extern FILE *yyin;
+    extern int yylex();
+    extern int yylineno;
+    extern FILE *yyin;
 
     /* Funciones para escribir errores */
-	void yyerror(char *);
-	void yyerror2(char*, char*);
+    void yyerror(char *);
+    void yyerror2(char*, char*);
 
     /* Última función que se ejecutara. */
-	void finish();
+    void finish();
 
-	/* Variable para el conteo de direcciones */
-	int dir=0;
+    /* Variable para el conteo de direcciones */
+    int dir=0;
+    char current_label[32];
 
-	/* Variables para guardar el tipo y ancho actual */
-	int current_type;
-	int current_dim;
-	int current_arr_type;
-	int current_dim_arr;
-	int current_function_type;
+    /* Variables para guardar el tipo y ancho actual */
+    int current_type;
+    int current_dim;
+    int current_arr_type;
+    int current_dim_arr;
+    int current_function_type;
+    char siguiente_breakable_pila[100][32];
+    int siguiente_count = 0;
 
-	/* Variables para contar las temporales, etiquetas e indices */
-	int label;
-	int temp;
-	int indice;
-	int breakeablecitos = 0;
+    /* Variables para contar las temporales, etiquetas e indices */
+    int label;
+    int temp;
+    int indice;
+    int breakeablecitos = 0;
+    char pila_switch[100][32];
+    int count_switch = 0;
 
-	/* Variable para el unico atributo heredado de sentencia prima*/
-	labels lfalses;
+    /* Variable para el unico atributo heredado de sentencia prima*/
+    labels lfalses;
 
-	/*pila para las tablas*/
-	struct nodo *stack_masterchefs; 
+    /*pila para las tablas*/
+    struct nodo *stack_masterchefs; 
 
-	/* Variable para la tabla de símbolos*/
-	struct mastertab *masterchef;
+    /* Variable para la tabla de símbolos*/
+    struct mastertab *masterchef;
 
-	/* Variable para guardar el código intermedio que se va generando */
-	ic codigo_intermedio;
+    /* Variable para guardar el código intermedio que se va generando */
+    ic codigo_intermedio;
 
 
-	/* Funciones auxiliares al análisis semántico y generación de código intermedio */
-	void init();
+    /* Funciones auxiliares al análisis semántico y generación de código intermedio */
+    void init();
 
-	exp suma(exp e1, exp e2);
-	exp resta(exp e1, exp e2);
-	exp multiplicacion(exp e1, exp e2);
-	exp division(exp e1, exp e2);
-	exp modulo(exp e1, exp e2);
-	exp get_numero(numero);
-	exp identificador(char *);
-	exp asignacion(char *, char *, exp, int);
+    exp suma(exp e1, exp e2);
+    exp resta(exp e1, exp e2);
+    exp multiplicacion(exp e1, exp e2);
+    exp division(exp e1, exp e2);
+    exp modulo(exp e1, exp e2);
+    exp get_numero(numero);
+    exp identificador(char *);
+    exp asignacion(char *, char *, exp, int);
 
     exp envolver_varr(varr);
     exp envolver_cadena(cadena);
@@ -88,13 +93,13 @@
     char *ampliar(char *dir, int t1, int t2);
     char *reducir(char *dir, int t1, int t2);
 
-    /* Funciones para generar temporales, etiquetas e indices */
+      /* Funciones para generar temporales, etiquetas e indices */
     char *newTemp();
     char *newLabel();
     char *newIndex();
 
     /* Para funciones */
-    void verifica_call(char[], int[], int);
+    void verifica_call(char[], int[][2], int);
     void verificar_main();
 %}
 
@@ -122,11 +127,12 @@
         labels siguientes;
         int ifelse;
     } siguientesp;
+    int dims;
     int rel;
     char char_signo[1];
     struct {
         int p;
-        int lista_tipos[100];
+        int lista_tipos[100][2];
         int count;
     } parrams;
 }
@@ -191,11 +197,14 @@
 %type<vararr> var_arr
 %type<rel> rel
 %type<booleanos> cond
-%type<siguientes> sent sents assign
+%type<booleanos> casos
+%type<siguientes> sent sents assign 
 %type<siguientesp> sentp
 %type<pi> parte_izq
 %type<char_signo> signo
 %type<argu> args lista_args
+%type<dims> parte_arr
+
 
 /* Definimos donde empezará el análisis. */
 %start prog
@@ -209,10 +218,12 @@ prog:
     funcs   
     {
         /* Imprimimos las tablas de tipo y símbolos y finalizamos. */
-	 	print_type_table(masterchef->tt);
-		print_table(masterchef->st); 
+        printf("Tabla de tipos\n");
+        print_type_table(masterchef->tt);
+        printf("Tabla de simbolos\n");
+        print_table(masterchef->st); 
         printf("P -> D funcs\n");
-		finish(); 
+        finish(); 
     }
 ;
 
@@ -222,7 +233,11 @@ prog:
    se agrega a la tabla de símbolos. */
 decls:
      tipo { 
-        current_type = $1.type;
+         current_type = $1.type;
+        if($1.type == 4) {
+            yyerror("No puedes declarar variables tipo void\n");
+            exit(1);
+        }
         current_dim = $1.bytes;
         current_dim_arr = current_dim; 
         current_arr_type = current_type;
@@ -238,10 +253,10 @@ decls:
 tipo: 
     INTTYPE { $$.type = 0; $$.bytes = 4; }
     | FLOATTYPE { $$.type = 1; $$.bytes = 4; }
-	| DOUBLETYPE { $$.type = 2; $$.bytes = 8; }
-	| CHARTYPE { $$.type = 3; $$.bytes = 1; }
-	| VOID { $$.type = 4; $$.bytes = 1; }
-	| STRUCT LCURLYB {
+    | DOUBLETYPE { $$.type = 2; $$.bytes = 8; }
+    | CHARTYPE { $$.type = 3; $$.bytes = 1; }
+    | VOID { $$.type = 4; $$.bytes = 1; }
+    | STRUCT LCURLYB {
         /* Creamos una nueva mastertab donde guardaremos las declaraciones dentro del struct. Además
         agregamos este nuevo mastertab del struct al tope de la pila de mastertabs. */
         struct mastertab* ntab = (struct mastertab *) malloc(sizeof(struct mastertab));
@@ -275,30 +290,30 @@ tipo:
    lista -> lista, id arreglo | id arreglo
    Aquí es donde se agrega a las tablas de simbolos los ids de las variables. */
 lista:
-	 lista COMMA ID arreglo {
-	    /* Agregamos a la tabla de simbolos que esté en el tope de mastertabs. */
-	 	sym s;
-		strcpy(s.id, $3);
-		s.type = current_arr_type;
-		s.dir = dir;
-		dir+= current_dim_arr;
-		insert(stack_masterchefs->tabla->st, s);
-		$$.cantidad  = current_dim_arr;
-		current_arr_type = current_type;
-		current_dim_arr = current_dim;
-	 } 
-	 | ID arreglo {
-	    /* Agregamos a la tabla de simbolos que esté en el tope de mastertabs. */
-	 	sym s;
-		strcpy(s.id, $1);
-		s.type = current_arr_type;
-		s.dir = dir;
-		dir+= current_dim_arr;
-		insert(stack_masterchefs->tabla->st, s);
-		$$.cantidad  = current_dim_arr;
-		current_arr_type = current_type;
-		current_dim_arr = current_dim;
-	 }
+     lista COMMA ID arreglo {
+        /* Agregamos a la tabla de simbolos que esté en el tope de mastertabs. */
+         sym s;
+        strcpy(s.id, $3);
+        s.type = current_arr_type;
+        s.dir = dir;
+        dir+= current_dim_arr;
+        insert(stack_masterchefs->tabla->st, s);
+        $$.cantidad  = current_dim_arr;
+        current_arr_type = current_type;
+        current_dim_arr = current_dim;
+     } 
+     | ID arreglo {
+        /* Agregamos a la tabla de simbolos que esté en el tope de mastertabs. */
+         sym s;
+        strcpy(s.id, $1);
+        s.type = current_arr_type;
+        s.dir = dir;
+        dir+= current_dim_arr;
+        insert(stack_masterchefs->tabla->st, s);
+        $$.cantidad  = current_dim_arr;
+        current_arr_type = current_type;
+        current_dim_arr = current_dim;
+     }
 ;
 
 /* Regla donde se definen los tipos de números posibles.
@@ -306,17 +321,17 @@ lista:
    Aquí es desde donde se guarda el tipo del número hasta llegar a exp. También se
    define el valor de este número en cadena. */
 numero:
-	signo INT { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
-	| signo DOUBLE { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
-	| signo FLOAT { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
+    signo INT { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
+    | signo DOUBLE { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
+    | signo FLOAT { $$.type = $2.type; strcpy($$.val, $1); strcat($$.val, $2.val); }
 ;
 
 /* Los signos de los números
    signo -> plus | minus | ɛ */
 signo: 
-	 PLUS { strcpy($$,""); }
-	 | MINUS { strcpy($$, "-"); }
-	 | /* empty */ { strcpy($$,""); }
+     PLUS { strcpy($$,""); }
+     | MINUS { strcpy($$, "-"); }
+     | /* empty */ { strcpy($$,""); }
 ;
 
 /* Aquí se definen las dimensiones de los arreglos.
@@ -341,7 +356,7 @@ arreglo:
         renglon.type = 5;
         renglon.tam = atoi($2.val);
         renglon.base.renglon = current_arr_type;
-        renglon.base.smt = null;
+        renglon.base.smt = NULL;
         insert_type_table(stack_masterchefs->tabla->tt, renglon);
         current_arr_type = stack_masterchefs->tabla->tt->count-1;
     } 
@@ -352,73 +367,74 @@ arreglo:
    funcs -> func tipo id (args) { decls sents } funcs | ɛ
    Se agrega la función a la tabla de simbolos global con sus argumentos */
 funcs:
-	 FUNC tipo ID {
-	    /* Creamos el mastertab de la función y la agregamos a la pila de mastertabs
-	       ya que decls agrega sus declaraciones al tope de la pila y queremos que se agreguen
-	       al mastertab de la función. */
-		struct mastertab* ntab = (struct mastertab *) malloc(sizeof(struct mastertab));
-		ntab->tt = (typetab *) malloc(sizeof(typetab));
-		ntab->st = (symtab *) malloc(sizeof(symtab));
-		create_table(ntab->st);
-		create_type_table(ntab->tt);
-		stack_masterchefs = mete(stack_masterchefs, ntab);
-		current_function_type = $2.type;
-	 }
-	 LPAR args RPAR {
-	    /* Agregamos una etiqueta que nos diga donde está el código de la función. */
-		cuadrupla c;
-		c.op = label;
-		char lab[32];
-		strcpy(lab, newlabel());
-		strcpy(c.op1, "");
-		strcpy(c.op2, "");
-		strcpy(c.res, $3);
-		insert_cuad(&codigo_intermedio, c);
+     FUNC tipo ID {
+        /* Creamos el mastertab de la función y la agregamos a la pila de mastertabs
+           ya que decls agrega sus declaraciones al tope de la pila y queremos que se agreguen
+           al mastertab de la función. */
+        struct mastertab* ntab = (struct mastertab *) malloc(sizeof(struct mastertab));
+        ntab->tt = (typetab *) malloc(sizeof(typetab));
+        ntab->st = (symtab *) malloc(sizeof(symtab));
+        create_table(ntab->st);
+        create_type_table(ntab->tt);
+        stack_masterchefs = mete(stack_masterchefs, ntab);
+        current_function_type = $2.type;
+     }
+     LPAR args RPAR {
+        /* Agregamos una etiqueta que nos diga donde está el código de la función. */
+        cuadrupla c;
+        c.op = LABEL;
+        char lab[32];
+        strcpy(lab, newLabel());
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, $3);
+        insert_cuad(&codigo_intermedio, c);
 
         /* Agregamos la función a la tabla de simbolos global junto con los tipos de los argumentos. */
-	 	sym s;
-		strcpy(s.id, $3);
-		s.type = $2.type;
-		s.dir = masterchef->tt->count;
-		s.var = 1;
-		for(int j = 0; j < $6.num; j++){
-			s.args[j] = $6.lista_args[j];
-		}
-		s.num_args = $6.num;
-		insert(masterchef->st, s);
-	 }
-	 LCURLYB decls sents {
-	    /* Aquí se hace backpatch para que se actualicen las etiquetas. */
+         sym s;
+        strcpy(s.id, $3);
+        s.type = $2.type;
+        s.dir = masterchef->tt->count;
+        s.var = 1;
+        for(int j = 0; j < $6.num; j++){
+            s.args[j][0] = $6.lista_args[j][0];
+            s.args[j][1] = $6.lista_args[j][1];
+        }
+        s.num_args = $6.num;
+        insert(masterchef->st, s);
+     }
+     LCURLYB decls sents {
+        /* Aquí se hace backpatch para que se actualicen las etiquetas. */
         cuadrupla c;
         char label[32];
-        c.op = label;
+        c.op = LABEL;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, get_first(&$11));
         insert_cuad(&codigo_intermedio, c);                
-        strcpy(label, newlabel());                                                
+        strcpy(label, newLabel());                                                
         backpatch(&$11, label, &codigo_intermedio);
-	 }
-	 RCURLYB {
-		struct mastertab* sacada;
-		sacada = tope(stack_masterchefs); 
-		stack_masterchefs = saca(stack_masterchefs);
+     }
+     RCURLYB {
+        struct mastertab* sacada;
+        sacada = tope(stack_masterchefs); 
+        stack_masterchefs = saca(stack_masterchefs);
 
         /* Agregamos la referencia del masterchef de la función */
-		typerow renglon;
-		renglon.type = 7;
-		renglon.tam = $10.cantidad;
-		renglon.base.renglon = -2;
-		renglon.base.smt = sacada;
-		insert_type_table(stack_masterchefs->tabla->tt, renglon);
+        typerow renglon;
+        renglon.type = 7;
+        renglon.tam = $10.cantidad;
+        renglon.base.renglon = -2;
+        renglon.base.smt = sacada;
+        insert_type_table(stack_masterchefs->tabla->tt, renglon);
 
-		cuadrupla c;
-		char label2[32];
-		strcpy(label2, newlabel());
-		c.op = goto;
-		strcpy(c.op1, "");
-		strcpy(c.op2, "");
-		strcpy(c.res, label2);
+        cuadrupla c;
+        char label2[32];
+        strcpy(label2, newLabel());
+        c.op = GOTO;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, label2);
         insert_cuad(&codigo_intermedio, c);                
      } funcs 
      | /* empty */ 
@@ -427,97 +443,105 @@ funcs:
 /* Argumentos de las funciones.
    args -> lista_args | ɛ */
 args:
-	lista_args {
-	    $$.num = $1.num; 
+    lista_args {
+        $$.num = $1.num; 
         /* Copiamos los argumentos en que tiene el hijo lista_args. */
-        for(int i = 0; i < $1.num; i++){
-            $$.lista_args[i] = $1.lista_args[i];
-        }
+		for(int i = 0; i < $1.num; i++){
+			$$.lista_args[i][0] = $1.lista_args[i][0];
+			$$.lista_args[i][1] = $1.lista_args[i][1];
+		}
     }
-	| /* empty */ { $$.num = 0; }
+    | /* empty */ { $$.num = 0; }
 ;
 
 /* Lista de argumentos de las funciones.
    lista_args -> lista_args, tipo id parte_arr | tipo id parte_arr */
 lista_args:
-    lista_args COMMA tipo ID parte_arr  {
+	lista_args COMMA tipo ID parte_arr  {
+		if($3.type == 4) {
+			yyerror("Los argumentos no pueden ser tipo void\n");
+			exit(1);
+		}
         /* Agregamos a la tabla de simbolos y tipos el argumento de la función */
-        typerow renglon;
-        renglon.type = $3.type;
-        renglon.tam = $3.type;
-        renglon.base.renglon = $3.type;
-        insert_type_table(stack_masterchefs->tabla->tt, renglon);
+		typerow renglon;
+		renglon.type = $3.type;
+		renglon.tam = $3.type;
+		renglon.base.renglon = $3.type;
+		insert_type_table(stack_masterchefs->tabla->tt, renglon);
+			
+		sym s;
+		strcpy(s.id, $4);
+		s.type = $3.type;
+		s.dir = dir;
+		dir+= renglon.tam;
+		insert(stack_masterchefs->tabla->st, s);
         
-        sym s;
-        strcpy(s.id, $4);
-        s.type = $3.type;
-        s.dir = dir;
-        dir+= renglon.tam;
-        insert(stack_masterchefs->tabla->st, s);
-
         /* Aumentamos el número de argumentos que llevamos guardados. */
-        $$.num = 1 + $1.num;
-        for(int i = 0; i < $1.num; i++){
-            $$.lista_args[i] = $1.lista_args[i];
-        }
-        $$.lista_args[$$.num-1] = $3.type;
-        } 
-        | tipo ID parte_arr {
+		$$.num = 1 + $1.num;
+		for(int i = 0; i < $1.num; i++){
+			$$.lista_args[i][0] = $1.lista_args[i][0];
+			$$.lista_args[i][1] = $1.lista_args[i][1];
+		}
+		$$.lista_args[$$.num-1][0] = $3.type;
+		$$.lista_args[$$.num-1][1] = $5;
+	} 
+	| tipo ID parte_arr {
+		if($1.type == 4) {
+			yyerror("Los argumentos no pueden ser tipo void\n");
+			exit(1);
+		}
         /* Ponemos los casos base de la lista de argumentos y del número de argumentos */
-        $$.num = 1;
-        $$.lista_args[0] = $1.type;
-        
-        /* Agregamos a la tabla de simbolos y tipos el argumento de la función */
-        typerow renglon;
-        renglon.type = $1.type;
-        renglon.tam = $1.type;
-        renglon.base.renglon = $1.type;
-        insert_type_table(stack_masterchefs->tabla->tt, renglon);
-    
-        print_type_table(stack_masterchefs->tabla->tt);
-        sym s;
-        strcpy(s.id, $2);
-        //s.type = stack_masterchefs->tabla->tt->count-1;
-        s.type = $1.type;
-        s.dir = dir;
-        dir+= renglon.tam;
-        insert(stack_masterchefs->tabla->st, s);
+		$$.num = 1;
+		$$.lista_args[0][0] = $1.type;
+		$$.lista_args[0][1] = $3;
+		
+		typerow renglon;
+		renglon.type = $1.type;
+		renglon.tam = $1.type;
+		renglon.base.renglon = $1.type;
+		insert_type_table(stack_masterchefs->tabla->tt, renglon);
+	
+		sym s;
+		strcpy(s.id, $2);
+		s.type = $1.type;
+		s.dir = dir;
+		dir+= renglon.tam;
+		insert(stack_masterchefs->tabla->st, s);
 
-        print_table(stack_masterchefs->tabla->st);
-    }
+	}
 ;
 
 /* La parte que hace que una variable sea un arreglo
    parte_arr -> [] parte_arr | ɛ */
 parte_arr:
-        LBRACKET RBRACKET parte_arr 
-        | /* empty */ 
+    LBRACKET RBRACKET parte_arr { $$ = $3 + 1; }
+    | /* empty */ { $$ = 0; }
 ;
 
 /* Concatenación de sentencias
    sent -> sents sent | sent */
 sents:
-	sents {
-	    /* Creamos una etiqueta */
+    sents {
+        /* Creamos una etiqueta */
         cuadrupla c;
-        c.op = label;
+        c.op = LABEL;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, get_first(&$1));
         insert_cuad(&codigo_intermedio, c);                                
     }
     sent {
-	    /* Hacemos Backbatch */
+        /* Hacemos Backbatch */
         char label[32];
-        strcpy(label, newlabel());                                
+        strcpy(label, newLabel());                                
         $$ = $3;                
         backpatch(&$1, label, &codigo_intermedio);                
         printf("ss->ss s\n");
     } 
     | sent {
-	    /* Hacemos Backbatch */
+        /* Hacemos Backbatch */
         char label[32];
-        strcpy(label, newlabel());
+        strcpy(label, newLabel());
         $$ = $1;
         backpatch(&$1, label, &codigo_intermedio);
         printf("ss->s\n");
@@ -537,11 +561,11 @@ sents:
          | print exp;
          | assign;     */
 sent:
-	IF LPAR cond RPAR {
-	    /* Obtenemos la etiqueta que está en el tope de trues de la condición y la agregamos
-	       a nuestro código */
+    IF LPAR cond RPAR {
+        /* Obtenemos la etiqueta que está en el tope de trues de la condición y la agregamos
+           a nuestro código */
         cuadrupla c;
-        c.op = label;
+        c.op = LABEL;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, get_first(&$3.trues));
@@ -551,7 +575,7 @@ sent:
         /* Agregamos a los falses globales la primer etiqueta que tenemos en la condición.
            Además agregamos a nuestro código el goto que tenemos en el tope de sent */
         cuadrupla c, c1;
-        c.op = goto;
+        c.op = GOTO;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, get_first(&$6));
@@ -560,7 +584,7 @@ sent:
     } sentp {
         /* Verificamos si tenemos un else en sentp y hacemos backpatch en ambos casos */
         char label[32];
-        strcpy(label, newlabel());
+        strcpy(label, newLabel());
         
         if($8.ifelse==false){
             $$ = merge(&$3.falses, &$8.siguientes);
@@ -568,77 +592,93 @@ sent:
             printf("s->if(b) s\n");
         }else{
             char label2[32];                                    
-            strcpy(label2, newlabel());                
+            strcpy(label2, newLabel());                
             $$ = merge(&$6,&$8.siguientes);
             backpatch(&$3.trues, label, &codigo_intermedio);
             backpatch(&$3.falses, label2, &codigo_intermedio);                 
             printf("s->if(b)s else s\n");
         }
     }
-    | WHILE LPAR cond RPAR { breakeablecitos += 1; } sent {
+    | WHILE  LPAR cond RPAR {
         /* Creamos nuevas etiquetas que las agregaremos a los trues y falses de cond.  */
+        breakeablecitos += 1;
+        strcpy(siguiente_breakable_pila[siguiente_count], $<siguientes>$.label[0]);
+        siguiente_count++;
+    } sent {
         char label[32], label2[32], temp[32];
-        strcpy(label, newindex());                
-        strcpy(label2, newindex());         
-        strcpy(temp, newtemp());
+        strcpy(label, newIndex());                
+        strcpy(label2, newIndex());         
+        strcpy(temp, newTemp());
         $$ = $3.falses;
         cuadrupla c1;
-        c1.op = iff;
+        c1.op = IFF;
         /* Agregamos un goto para que evalue la condición otra vez */
-        strcpy(c1.op2, "goto");
+        strcpy(c1.op2, "GOTO");
         strcpy(c1.res, label);                
         insert_cuad(&codigo_intermedio, c1);
         /* Hacemos backpatch */
         backpatch(&$3.trues, label, &codigo_intermedio);
         backpatch(&$3.falses, label2, &codigo_intermedio);
-        printf("s->while(b)s\n");
-		breakeablecitos -= 1;
+        printf("S->while(B)S\n");
+        breakeablecitos -= 1; 
+        strcpy(siguiente_breakable_pila[siguiente_count], $<siguientes>$.label[0]);
+        siguiente_count--;
     }
-    | DO { breakeablecitos += 1; } sent WHILE LPAR cond RPAR SEMICOLON {
+    | DO {
         /* Muy parecido al while */
-		char label[32], label2[32], temp[32];
-        strcpy(label, newindex());                
+        breakeablecitos += 1;
+        strcpy(siguiente_breakable_pila[siguiente_count], $<siguientes>$.label[0]);
+        siguiente_count++;
+    } sent WHILE LPAR cond RPAR SEMICOLON {
+        char label[32], label2[32], temp[32];
+        strcpy(label, newIndex());                
 
-		/* Ejecución incondicional de la sentencia */
-		backpatch(&$6.trues, label, &codigo_intermedio);
+        /* Ejecución incondicional de la sentencia */
+        backpatch(&$6.trues, label, &codigo_intermedio);
 
-        strcpy(label2, newindex());         
-        strcpy(temp, newtemp());
+        strcpy(label2, newIndex());         
+        strcpy(temp, newTemp());
         $$ = $6.falses;
         cuadrupla c1;
-        c1.op = iff;
-        strcpy(c1.op2, "goto");
+        c1.op = IFF;
+        strcpy(c1.op2, "GOTO");
         strcpy(c1.res, label);                
         insert_cuad(&codigo_intermedio, c1);
         backpatch(&$6.trues, label, &codigo_intermedio);
         backpatch(&$6.falses, label2, &codigo_intermedio);
         printf("s->do s while(b)\n");
-		breakeablecitos -= 1;
-	}
-    | FOR LPAR assign SEMICOLON cond SEMICOLON assign RPAR { breakeablecitos += 1; } sent {
+        breakeablecitos -= 1;
+        siguiente_count++;
+    }
+    | FOR LPAR assign SEMICOLON cond SEMICOLON assign RPAR { 
         /* Muy parecido al while */
-		meter_assign($3.arr_codigo, $3.count_codigo);
+        breakeablecitos += 1; 
+        strcpy(siguiente_breakable_pila[siguiente_count], $<siguientes>$.label[0]);
+        siguiente_count++;
+    } sent {
+        meter_assign($3.arr_codigo, $3.count_codigo);
         char label[32], label2[32], temp[32];
-        strcpy(label, newindex());                
-        strcpy(label2, newindex());         
-        strcpy(temp, newtemp());
+        strcpy(label, newIndex());                
+        strcpy(label2, newIndex());         
+        strcpy(temp, newTemp());
         $$ = $5.falses;
         cuadrupla c1;
-        c1.op = iff;
-        strcpy(c1.op2, "goto");
+        c1.op = IFF;
+        strcpy(c1.op2, "GOTO");
         strcpy(c1.res, label);                
         insert_cuad(&codigo_intermedio, c1);
         backpatch(&$5.trues, label, &codigo_intermedio);
         backpatch(&$5.falses, label2, &codigo_intermedio);
-		meter_assign($7.arr_codigo, $7.count_codigo);
+        meter_assign($7.arr_codigo, $7.count_codigo);
         printf("s->for(ass; cond; ass) sent\n");
-		breakeablecitos -= 1;
+        breakeablecitos -= 1;
+        siguiente_count--;
     }
-	| assign SEMICOLON {
-	    /* meter_assign ya hace todo el trabajo */
-	    meter_assign($1.arr_codigo, $1.count_codigo);
-	}
-	| RETURN exp SEMICOLON {
+    | assign SEMICOLON {
+        /* meter_assign ya hace todo el trabajo */
+        meter_assign($1.arr_codigo, $1.count_codigo);
+    }
+    | RETURN exp SEMICOLON {
         /* Verificamos el tipo de retorno con el de la función */
         if($2.type != current_function_type) {
             yyerror("tipo de retorno distinto al tipo de la funcion \n");
@@ -646,51 +686,65 @@ sent:
         }
         /* Agregamos el goto adecuado */
         cuadrupla c1;
-        c1.op = goto;
+        c1.op = GOTO;
         char label1[32];
-        strcpy(label1, newlabel());
+        strcpy(label1, newLabel());
         strcpy(c1.op1, "");
         strcpy(c1.op2, "");
         strcpy(c1.res, label1);
         insert_cuad(&codigo_intermedio, c1);
-	
-	}
-	| RETURN SEMICOLON {
+    
+    }
+    | RETURN SEMICOLON {
         /* Verificamos que el tipo de la función sea void */
         if(4 != current_function_type) {
             yyerror("tipo de retorno void distinto al tipo de la funcion \n");
             exit(1);
         }
     }
-	| LCURLYB sents RCURLYB {
+    | LCURLYB sents RCURLYB {
         /* Aquí es donde se hace la concatenación de sentencias */
         char label[32];
         $$ = $2;                
-        strcpy(label, newlabel());                
+        strcpy(label, newLabel());                
         /* Se hace backpatch */
         backpatch(&$2, label, &codigo_intermedio);                                
         printf("s->{ss}\n");
     }  
-	| SWITCH LPAR exp RPAR LCURLYB casos RCURLYB 
-	| BREAK SEMICOLON {
-        /* Verificamos que el break sea dentro de un break */
-	    if(breakeablecitos < 1) {
-            yyerror("el break debe estar dentro de un ciclo \n");
-            exit(1);
-        }
-        cuadrupla c1;
-        c1.op = goto;
-        char label1[32];
-        strcpy(label1, newlabel());
-        strcpy(c1.op1, "");
-        strcpy(c1.op2, "");
-        strcpy(c1.res, label1);
-        insert_cuad(&codigo_intermedio, c1);
-
+    | SWITCH LPAR exp RPAR {
+		if($3.type != 0) {
+			yyerror("La expresion del switch debe ser un numero entero\n");
+			exit(1);
+		}
+		breakeablecitos++;
+		strcpy(siguiente_breakable_pila[siguiente_count], $<siguientes>$.label[0]);
+		siguiente_count++;
+    
+		strcpy(pila_switch[count_switch], $3.dir); count_switch++; 
+	} LCURLYB casos RCURLYB {
+		count_switch--;
+		breakeablecitos--;
+		siguiente_count--;
 	}
+    | BREAK SEMICOLON {
+        /* Verificamos que el break sea dentro de un break */
+		if(breakeablecitos < 1) {
+			yyerror("El break debe estar dentro de un ciclo \n");
+			exit(1);
+		}
+		cuadrupla c1;
+		c1.op = GOTO;
+		char label1[32];
+		strcpy(label1, newLabel());//siguiente_breakable_pila[siguiente_count]);
+		strcpy(c1.op1, "");
+		strcpy(c1.op2, "");
+		strcpy(c1.res, label1);
+		insert_cuad(&codigo_intermedio, c1);
+
+    }
     | PRINT exp SEMICOLON {
         char i[32];
-        strcpy(i, newindex());
+        strcpy(i, newIndex());
         $$ = create_list(i);
         printf("s->print(e);\n");
     }
@@ -699,28 +753,29 @@ sent:
 /* Asignaciones
    assign -> parte_izq assig exp */
 assign: 
-    parte_izq ASSIG exp {
-        char i[32];
-        strcpy(i, newindex());
-        $$ = create_list(i);
-        /* asignacion es lo que hace todo el trabajo */
-        exp e = asignacion($1.id1, $1.id2, $3, $1.type); 
-        int iterador;
-        $$.count_codigo = e.count_codigo;
-        for(iterador = 0; iterador < e.count_codigo; iterador++) {
-            $$.arr_codigo[iterador] = e.arr_codigo[iterador];
-        }
-	} 
+	parte_izq ASSIG exp {
+		char i[32];
+		strcpy(i, newIndex());
+		$$ = create_list(i);
+		/* asignacion es lo que hace todo el trabajo */
+		exp e = asignacion($1.id1, $1.id2, $3, $1.type); 
+		printf("S->parte_izq = E;\n");
+		int iterador;
+		$$.count_codigo = e.count_codigo;
+		for(iterador = 0; iterador < e.count_codigo; iterador++) {
+			$$.arr_codigo[iterador] = e.arr_codigo[iterador];
+		}
+    } 
 ;
 
 /* Parte del if que incluye o no un else
    sentp -> ɛ | else sent */
 sentp:
-	{ /* Decimos que no tenemos un else */ $$.ifelse= false;} %prec IFX
-	| ELSE {        
-	    /* Agregamos la etiqueta que tenemos en los falses al código*/
+    { /* Decimos que no tenemos un else */ $$.ifelse= false;} %prec IFX
+    | ELSE {        
+        /* Agregamos la etiqueta que tenemos en los falses al código*/
         cuadrupla c1;
-        c1.op = label;
+        c1.op = LABEL;
         strcpy(c1.op1, "");
         strcpy(c1.op2, "");
         strcpy(c1.res, pop_label(&lfalses));
@@ -736,9 +791,57 @@ sentp:
 /* Casos que maneja el switch.
    sentp -> case numero sent casos | default sent | ɛ  */
 casos:
-    CASE numero sent casos 
-    | DEFAULT sent 
-    | /* empty */ 
+    CASE numero { 
+        char i[32];
+        char i2[32];
+        char temp[32];
+        strcpy(i, newIndex());
+        strcpy(i2, newIndex());
+        strcpy(temp, newTemp());
+        strcpy(current_label, i2);
+
+        $<booleanos>$.trues = create_list(i);
+        $<booleanos>$.falses = create_list(i2);
+
+        cuadrupla c, c1, c2;
+        c.op = EQUALS;
+        char tope_dir[32];
+        strcpy(tope_dir, pila_switch[count_switch-1]);
+        strcpy(c.op1, tope_dir);
+        strcpy(c.op2, $2.val);
+        strcpy(c.res, temp);            
+        c1.op = IFF;
+        strcpy(c1.op1, temp);
+        strcpy(c1.op2, "GOTO");
+        strcpy(c1.res, i);            
+        c2.op = GOTO;
+        strcpy(c2.op1, "");
+        strcpy(c2.op2, "");
+        strcpy(c2.res, i2);
+        insert_cuad(&codigo_intermedio, c);
+        insert_cuad(&codigo_intermedio, c1);
+        insert_cuad(&codigo_intermedio, c2);
+        printf("B-> case num: sent \n");
+
+        cuadrupla c3;
+        c3.op = LABEL;
+        strcpy(c3.op1, "");
+        strcpy(c3.op2, "");
+        strcpy(c3.res, i);
+        insert_cuad(&codigo_intermedio, c3);
+    } sent {
+        cuadrupla c, c1;
+        c.op = LABEL;
+        strcpy(c.op1, "");
+        strcpy(c.op2, "");
+        strcpy(c.res, current_label);
+        push_label(&lfalses, get_first(&$<booleanos>$.falses));
+        insert_cuad(&codigo_intermedio, c);
+
+     }
+     casos 
+     | DEFAULT sent 
+     | /* empty */
 ;
 
 /* Parte izquierda de una asignación.
@@ -755,82 +858,105 @@ parte_izq:
 /* Reglas de producción para la parte izquierda de una asignación cuando es del tipo
    var_arr -> id[exp] */
 var_arr:
-    ID LBRACKET exp RBRACKET { 
+	ID LBRACKET exp RBRACKET {
         // Verificando que se indexe el arreglo con una expresión de tipo entera.
-        if($3.type != 0) { 
-            yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
-        }
-        if($3.dir[0] != 't' && $3.dir[0] == '-') {
-            yyerror("No puedes indexar el arreglo con un arreglo con un número negativo");
-            exit(1);
-        }
-        // Formando la cadena que representa a la variable de arreglo indexada.
-        strcpy($$.representacion, $1);
-        strcat($$.representacion, "[");
-        strcat($$.representacion, $3.dir);
-        strcat($$.representacion, "]");
+	    if($3.type != 0) { 
+			yyerror("Debes indexar el arreglo con un entero.\n"); 
+		}
+		if($3.dir[0] != 't' && $3.dir[0] == '-') {
+			yyerror("No puedes indexar el arreglo con un arreglo con un número negativo");
+			exit(1);
+		}
+		// Formando la cadena que representa a la variable de arreglo indexada.
+		strcpy($$.representacion, $1);
+		strcat($$.representacion, "[");
+		strcat($$.representacion, $3.dir);
+		strcat($$.representacion, "]");
         // Creando un nuevo nodo para iterar la pila de tablas maestras.
-        struct nodo* it = stack_masterchefs;
+		struct nodo* it = stack_masterchefs;
         // Recorremos la pila para buscar el identificador en ella.
-        int encontrado = 0;
-        while(it != NULL) {
-            // Estamos buscando con el identificador en la tabla de símbolos a la que apunta el iterador.
-            int x = search(it->tabla->st, $1); 
-            if(x != -1) {
-                // Si ya la encontramos, podemos consultar el tipo en dicho renglón encontrado.
-                encontrado = 1;
-                int type_row = it->tabla->st->symbols[x].type;
-                $$.type = it->tabla->tt->trs[type_row].base.renglon;
-                // En el ciclo seguiremos subiendo a partir de los tipos hasta llegar al de la base.
-                // Sin embargo, si en algún punto llegaos a ver un -1 es porque estamos indexando a un arreglo
-                // que fue declarado con un número menor de dimensiones y reportamos el error. 
-                if($$.type == -1) {
-                    yyerror("Error: Mayor cantidad de dimensiones que las definidas.");
-                    exit(1);
-                }
-                break;
-            }
-            it = it->siguiente;
-        }
+		int encontrado = 0;
+			
+		while(it != NULL) {
+			// Estamos buscando con el identificador en la tabla de símbolos a la que apunta el iterador.
+			int x = search(it->tabla->st, $1); 
+			if(x != -1) {
+				// Si ya la encontramos, podemos consultar el tipo en dicho renglón encontrado.
+				encontrado = 1;
+				int type_row = it->tabla->st->symbols[x].type;
+				$$.type = it->tabla->tt->trs[type_row].base.renglon;
+				$$.tipo_basico = $$.type;
+				// En el ciclo seguiremos subiendo a partir de los tipos hasta llegar al de la base.
+				// Sin embargo, si en algún punto llegaos a ver un -1 es porque estamos indexando a un arreglo
+				// que fue declarado con un número menor de dimensiones y reportamos el error. 
+				if($$.type == -1) {
+					yyerror("Mayor cantidad de dimensiones que las definidas");
+					exit(1);
+				}
+				$$.tamanios[0] = it->tabla->tt->trs[$$.tipo_basico+1].tam;
+				int mydims = 1;
+				while($$.tipo_basico > 4){
+					$$.tamanios[mydims] = it->tabla->tt->trs[$$.tipo_basico].tam;
+					mydims++;
+					$$.tipo_basico = it->tabla->tt->trs[$$.tipo_basico].base.renglon;    
+				}
+				if($3.dir[0] != 't' && $$.tamanios[$$.indice_tamanios] <= atoi($3.dir)) {
+					yyerror("Index out of bounds exception\n");
+					exit(1);
+				}
+				$$.indice_tamanios++;
+				$$.dims = mydims - 1;
+				break;
+			}
+			it = it->siguiente;
+		}
         // Si saliendo del ciclo ocurre que el identificador jamás fue encontrado, entonces
         // no había sido declarado antes y reportamos el error.
-        if(!encontrado) {
-            yyerror("Error: El arreglo no fue declarado antes.\n");
-            exit(1);
-        }
+		if(!encontrado) {
+			yyerror("El arreglo no fue declarado antes.\n");
+			exit(1);
+		} 
         // Especificando que la tabla de tipos del lado izquierdo es la tabla a la que apunta el iterador. 
-        $$.tt = it->tabla->tt; 
-    }  
-    | var_arr LBRACKET exp RBRACKET {
-        // Regla de producción recursiva para seguir metiendo indexaciones.
-        // Armando la representación de la indexación.
-        strcat($$.representacion, "[");
-        strcat($$.representacion, $3.dir);
-        strcat($$.representacion, "]");
-        // Checando que se indexe con una expresión de tipo entera.
-        if($3.type != 0) { 
-            yyerror("Error: Debes indexar el arreglo con un entero.\n"); 
-        }
-        if($3.dir[0] != 't' && $3.dir[0] == '-') {
+		$$.tt = it->tabla->tt; }//valor   
+	| var_arr LBRACKET exp RBRACKET { 
+		// Regla de producción recursiva para seguir metiendo indexaciones.
+		// Armando la representación de la indexación.
+		$$.tipo_basico = $1.tipo_basico;
+		$$.dims = $1.dims - 1;
+		strcat($$.representacion, "[");
+		strcat($$.representacion, $3.dir);
+		strcat($$.representacion, "]");
+		// Checando que se indexe con una expresión de tipo entera.
+		if($3.type != 0) { 
+			yyerror("Debes indexar el arreglo con un entero.\n"); 
+		}
+		if($3.dir[0] != 't' && $3.dir[0] == '-') {
             yyerror("No puedes indexar el arreglo con un arreglo con un número negativo");
             exit(1);
         }
         // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
-        if($1.type == -1) {
-            yyerror("Error: Mayor cantidad de dimensiones que las definidas");
-            exit(1);
-        } 
+		if($1.type == -1) {
+			yyerror("Mayor cantidad de dimensiones que las definidas");
+			exit(1);
+		}  
         // Checando el tipo del rengón del varr_arr del cuerpo de la producción.
-        int row_hijo = $1.type;
-        $$.type = (*$1.tt).trs[row_hijo].base.renglon;
+		int row_hijo = $1.type;
+		$$.type = (*$1.tt).trs[row_hijo].base.renglon;
         // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
-        if($$.type == -1) {
-            yyerror("Error: Mayor cantidad de dimensiones que las definidas");
-            exit(1);
-        } 
+		if($$.type == -1) {
+			yyerror("Mayor cantidad de dimensiones que las definidas");
+			exit(1);
+		}  
+		if($3.dir[0] != 't' && $$.tamanios[$$.indice_tamanios] <= atoi($3.dir)) {
+			yyerror("Index out of bounds exceptionkk\n");
+			exit(1);
+		}
+		$$.indice_tamanios++;
+
         // La tabla de tipos de la cabecera es la del varr_arr del cuerpo.
-        $$.tt = $1.tt;
-    }
+		$$.tt = $1.tt;
+
+	}
 ;
 
 /* Reglas de producción para las expresiones.
@@ -858,12 +984,13 @@ exp:
     } 
     | var_arr { 
         $$ = envolver_varr($1); 
+		$$.tipo_basico = $1.tipo_basico;
+		$$.dims = $1.dims;
         printf("E -> id[E]\n"); 
     }
     | ID { 
         $$ = identificador($1); 
         printf("E->id\n");
-        printf("%s\n", $1); 
     } 
     | CADENA { 
         // Pasando la cadena de la expresión regular a un tipo expresión.
@@ -873,7 +1000,6 @@ exp:
     | numero { 
         $$ = get_numero($1);
         printf("E->numero\n");
-        printf("%s\n",$1.val);
     }
     | CARACTER { 
         // Pasando el carácter de la expresión regular a un tipo expresión.
@@ -907,9 +1033,10 @@ params:
         $$.p = $1.p;
         // Copiamos los tipos parámetros de la lista de parámetros.
         int i;
-        for (i = 0; i < $1.count; i++) {
-            $$.lista_tipos[i] = $1.lista_tipos[i];
-        }
+		for (i = 0; i < $1.count; i++) {
+			$$.lista_tipos[i][0] = $1.lista_tipos[i][0];
+			$$.lista_tipos[i][1] = $1.lista_tipos[i][1];
+		}
         // El número de parámetros son los de la lista de parámetros.
         $$.count = $1.count;
     }
@@ -923,32 +1050,34 @@ params:
 /* Reglas de producción para la lista de parámetros.
    lista_param -> lista_param , exp | exp */
 lista_param:
-   lista_param COMMA exp {
-        // Creando la cuadrupla e insertándola en el código intermedio.
-        cuadrupla c;
-        c.op = PARAM;
-        strcpy(c.op1, "");
-        strcpy(c.op2, "");
-        strcpy(c.res, $3.dir);
-        insert_cuad(&codigo_intermedio, c);  
-        // Incrementando la cantidad de argumentos y copiando el tipo del actual.                  
-        $$.p = $1.p + 1;
-        $$.lista_tipos[$1.count] = $3.type;
-        $$.count = $1.count + 1;
-   }
-   | exp {
-        // Creando la cuadrupla e insertándola en el código intermedio.
-        cuadrupla c;
-        c.op = PARAM;
-        strcpy(c.op1, "");
-        strcpy(c.op2, "");
-        strcpy(c.res, $1.dir);
-        insert_cuad(&codigo_intermedio, c);
-        // Como es el caso base, tenemos un solo argumento y su tipo es el tipo de la expresión.                    
-        $$.p = 1;
-        $$.lista_tipos[0] = $1.type;
-        $$.count = 1;
-   }
+	lista_param COMMA exp {
+		// Creando la cuadrupla e insertándola en el código intermedio.
+		cuadrupla c;
+		c.op = PARAM;
+		strcpy(c.op1, "");
+		strcpy(c.op2, "");
+		strcpy(c.res, $3.dir);
+		insert_cuad(&codigo_intermedio, c);                    
+		// Incrementando la cantidad de argumentos y copiando el tipo del actual.                  
+		$$.p = $1.p + 1;
+		$$.lista_tipos[$1.count][0] = $3.tipo_basico;
+		$$.lista_tipos[$1.count][1] = $3.dims;
+		$$.count = $1.count + 1;
+	}
+		| exp {
+		// Creando la cuadrupla e insertándola en el código intermedio.
+		cuadrupla c;
+		c.op = PARAM;
+		strcpy(c.op1, "");
+		strcpy(c.op2, "");
+		strcpy(c.res, $1.dir);
+		insert_cuad(&codigo_intermedio, c);                    
+		// Como es el caso base, tenemos un solo argumento y su tipo es el tipo de la expresión.                    
+		$$.p = 1;
+		$$.lista_tipos[0][0] = $1.tipo_basico;
+		$$.lista_tipos[0][1] = $1.dims;
+		$$.count = 1;
+	}
 ;
 
 /* Reglas de producción para las condiciones.
@@ -958,7 +1087,7 @@ cond:
     cond OR {
         // Creación de la cuadrupla con la operación de label.
         cuadrupla c;
-        c.op = label;
+        c.op = LABEL;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, get_first(&$1.falses));
@@ -976,7 +1105,7 @@ cond:
     | cond AND {
         // Creación de la cuadrupla con la operación de label.
         cuadrupla c;
-        c.op = label;
+        c.op = LABEL;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, get_first(&$1.trues));
@@ -984,7 +1113,7 @@ cond:
         insert_cuad(&codigo_intermedio, c);                    
     } cond {
         char label[32];
-        strcpy(label, newlabel());                        
+        strcpy(label, newLabel());                        
         $$.falses = merge(&$1.falses, &$4.falses);
         $$.trues = $4.trues;
         // Haciendo backpatch con la nueva etiqueta. 
@@ -1026,7 +1155,7 @@ cond:
         // Especificación de la segunda cuadrupla.
         c1.op = IFF;
         strcpy(c1.op1, temp);
-        strcpy(c1.op2, "goto");
+        strcpy(c1.op2, "GOTO");
         strcpy(c1.res, i);            
             
         // Especificación de la tercera cuadrupla.
@@ -1040,15 +1169,14 @@ cond:
         insert_cuad(&codigo_intermedio, c1);
         insert_cuad(&codigo_intermedio, c2);
         printf("b->e rel e\n");
-        printf("e1.dir %s rel e2.dir %s\n", $1.dir, $3.dir);
     }
     | TRUE {
         char i[32];
-        strcpy(i, newindex());
+        strcpy(i, newIndex());
         $$.trues = create_list(i);
         // Creación de la cuadrupla y con la operación de goto.
         cuadrupla c;
-        c.op = goto;
+        c.op = GOTO;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, i);
@@ -1058,11 +1186,11 @@ cond:
     } 
     | FALSE {
         char i[32];
-        strcpy(i, newindex());
+        strcpy(i, newIndex());
         $$.falses = create_list(i);
         // Creación de la cuadrupla y con la operación de goto.
         cuadrupla c;
-        c.op = goto;
+        c.op = GOTO;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, i);
@@ -1183,6 +1311,7 @@ exp suma(exp e1, exp e2){
     cuadrupla c;
     // El tipo de la expresión es el mayor de los dos tipos de las expresiones.
     e.type = max(e1.type, e2.type);
+    e.tipo_basico = e.type;
     // Checando por errores de tipos.
     if( e.type==-1) yyerror("Error de tipos");
     else{
@@ -1220,6 +1349,8 @@ exp resta(exp e1, exp e2){
     char t[32];
     // El tipo de la expresión es el mayor de los dos tipos de las expresiones.
     e.type = max(e1.type, e2.type);
+    e.tipo_basico = e.type;
+    
     // Checando por errores de tipos.
     if( e.type==-1) yyerror("Error de tipos");
     else{
@@ -1255,6 +1386,7 @@ exp multiplicacion(exp e1, exp e2){
     cuadrupla c;
     // El tipo de la expresión es el mayor de los dos tipos de las expresiones.
     e.type = max(e1.type, e2.type);
+    e.tipo_basico = e.type;
     // Checando por errores de tipos.
     if( e.type==-1) yyerror("Error de tipos");
     else{
@@ -1291,6 +1423,7 @@ exp division(exp e1, exp e2){
     cuadrupla c;
     // El tipo de la expresión es el mayor de los dos tipos de las expresiones.
     e.type = max(e1.type, e2.type);
+    e.tipo_basico = e.type;
     // Checando por errores de tipos.
     if( e.type==-1) yyerror("Error de tipos");
     else{
@@ -1332,6 +1465,7 @@ exp modulo(exp e1, exp e2){
     cuadrupla c;
     // El tipo de la expresión es el mayor de los dos tipos de las expresiones.
     e.type = max(e1.type, e2.type);
+    e.tipo_basico = e.type;
     // Checando por errores de tipos.
     if( e.type==-1) yyerror("Error de tipos");
     else{
@@ -1398,30 +1532,31 @@ int get_tipo_tablas(char *id) {
  * 
  * Creada el 9 de diciembre de 2018.
  */
-void verifica_call(char id[], int params[], int params_count) {
+void verifica_call(char id[], int params[][2], int params_count) {
     // Buscando el renglón en la tabla de símbolos del identificador.
     int renglon = search(masterchef->st, id);
     if (renglon == -1) {
-        // Erroe en caso de que no sea encontrada.
-        yyerror("Error: La funcion que quieres llamar no ha sido declarado\n");
+        // Error en caso de que no sea encontrada.
+        yyerror("La funcion que quieres llamra no ha sido declarado\n");
         exit(1);
     }
     // Checando que sea llamda con el mismo número de argumentos con que fue declarada.
     if (masterchef->st->symbols[renglon].num_args != params_count) {
         char error[1000];
-        strcpy(error, "Error: El número de argumentos con la que fue llamada la función es incorrecto: ");
+        strcpy(error, "El número de argumentos con la que fue llamada la función es incorrecto: ");
         yyerror2(error, id);
         exit(1);
     }
     // Checando que el tipo de los parámetros con que es llamda coincida con los de la declaración.
     for (int j = 0; j < params_count; j++) {
-        if (masterchef->st->symbols[renglon].args[j] != params[j]) {
+        if (masterchef->st->symbols[renglon].args[j][0] != params[j][0] || masterchef->st->symbols[renglon].args[j][1] != params[j][1]) {
             char error[1000];
-            strcpy(error, "Error: Los tipos de los argumentos que ingresaste no son correcto con la funcion: ");
+            strcpy(error, "Los tipos de los argumentos que ingresaste no son correcto con la funcion: ");
             yyerror2(error, id);
             exit(1);
-        }
+        } 
     }
+    
 }
 
 /**
@@ -1456,7 +1591,7 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
             // Buscamos el id antes del punto en la tabla de símbolos para saber si fue declarado antes.
             int renglon = search(masterchef->st, id);
             if (renglon == -1) {
-                yyerror("Error: El identificador no fue declarado\n");
+                yyerror("El identificador no fue declarado\n");
                 exit(1);
             }
             // Tenemos la tabla de tipos global.
@@ -1474,17 +1609,18 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
                     renglon2 = search(st_struct, id2);
                     // En este caso la estructura así antes.
                     if(renglon2 == -1) {
-                        yyerror("Error: El struct no fue declarado como lo usaste.\n");
+                        yyerror("El struct no fue declarado\n");
                         exit(1);
                     }
                 }
                 tipo = get_type(st_struct, id2);
                 // En el caso contrario hay un error semántico.
             } else {
-                yyerror2("Error: Intento de acceso a atributo de no estructura: ", id);
+                yyerror2("Intento de acceso a atributo de no estructura: ", id);
                 exit(1);
             }
         }
+
         if( tipo != -1){        
             // El tipo de la expresión a devolver es el de la expresión luego de la asignación.
             e1.type = e.type;
@@ -1492,7 +1628,6 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
             // Creando la cuadrupla para la asignación y colocando la operación.
             cuadrupla c;
             c.op = ASSIGNATION;
-            printf("%s %d %d\n", e.dir, tipo, e.type);
             // Colocando lo necesario de la cuadrupla.
             strcpy(c.op1, reducir(e.dir, tipo, e.type));
             strcpy(c.op2, "");
@@ -1505,28 +1640,31 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
             } else {
                 strcpy(c.res, id);
             }
+            //insert_cuad(&codigo_intermedio, c);  
             // Colocando lo respectivo al código a la expresión.
-            e1.arr_codigo[e1.count_codigo] = c; 
+            e1.arr_codigo[e1.count_codigo] = c;    
             e1.count_codigo++;
-        } else{
+        } else {
             // Caso para el error semántico.
-            yyerror("Error: El identificador no fue declarado\n");
+            yyerror("El identificador no fue declarado\n");
             exit(1);
         }
-    } else {        // Aquí se maneja el caso para var_arr.
+    } else { // Aquí se maneja el caso para var_arr.
+        // VARARR
         e1.type = e.type;
         strcpy(e1.dir, id);
-        // Crando la cuadrupla.
+        // Creando la cuadrupla.
         cuadrupla c;
         c.op = ASSIGNATION;
         strcpy(c.op1, reducir(e.dir, trecibido, e.type));
         strcpy(c.op2, "");
         // En este caso id es la representacin de var_arr.
-        strcpy(c.res, id);
+        strcpy(c.res, id);//en este caso id es la representacin de vararr
         // Asociando lo respectivo al código a la expresión.
         e1.arr_codigo[e1.count_codigo] = c;
-        e1.count_codigo++;}
-        return e1;
+        e1.count_codigo++;
+	}
+	return e1;
 }
 
 /**
@@ -1544,6 +1682,7 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
 exp get_numero(numero n){
     exp e;
     e.type = n.type;
+    e.tipo_basico = e.type;
     strcpy(e.dir, n.val);
     return e;
 }
@@ -1563,6 +1702,7 @@ exp get_numero(numero n){
 exp envolver_cadena(cadena cadenita) {
     exp e;
     e.type = cadenita.type;
+    e.tipo_basico = e.type;
     strcpy(e.dir, cadenita.val);
     return e;
 }
@@ -1582,6 +1722,7 @@ exp envolver_cadena(cadena cadenita) {
 exp envolver_caracter(caracter caractercito) {
     exp e;
     e.type = caractercito.type;
+    e.tipo_basico = e.type;
     e.dir[0] = caractercito.val;
     return e;
 }
@@ -1623,12 +1764,26 @@ exp identificador(char *id){
     if(search(stack_masterchefs->tabla->st, id) !=-1){
         // Si lo encontramos, podemos copiar su valor en la dirección de la expresión.
         e.type = get_type(stack_masterchefs->tabla->st, id);
+        e.tipo_basico = e.type;
+        int mydims = 0;
+        while(e.tipo_basico > 4){
+            e.tipo_basico = stack_masterchefs->tabla->tt->trs[e.tipo_basico].base.renglon;    
+            mydims++;
+        }
+        e.dims = mydims;
         strcpy(e.dir, id);
     }else{
         // En otro caso buscamos el identificador en la tabla global.
         if(search(masterchef->st, id) !=-1){
             // Si ya lo encontramos, copiamos su valor en el dirección de la expresión.
             e.type = get_type(masterchef->st, id);
+            e.tipo_basico = e.type;
+            int mydims = 0;
+            while(e.tipo_basico > 4){
+                mydims++;
+                e.tipo_basico = masterchef->tt->trs[e.tipo_basico].base.renglon;    
+            }
+            e.dims = mydims;
             strcpy(e.dir, id);
         } else {
             // Si no, entonces error porque no fue declarada antes.
@@ -1657,7 +1812,7 @@ char *ampliar(char *dir, int t1, int t2){
     if( t1==t2) return dir;
     // Cast de entero a float.
     if( t1 ==0 && t2 == 1){
-        c.op = EQ;
+        c.op = EQUALS;
         strcpy(c.op1, "(float)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
@@ -1668,7 +1823,7 @@ char *ampliar(char *dir, int t1, int t2){
     }
     // Cast de entero a double.
     if( t1 ==0 && t2 == 2){
-        c.op = EQ;
+        c.op = EQUALS;
         strcpy(c.op1, "(double)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
@@ -1679,7 +1834,7 @@ char *ampliar(char *dir, int t1, int t2){
     }        
     // Cast de float a double.
     if( t1 ==1 && t2 == 2) {
-        c.op = EQ;
+        c.op = EQUALS;
         strcpy(c.op1, "(double)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
@@ -1709,7 +1864,7 @@ char *reducir(char *dir, int t1, int t2){
     if( t1==t2) return dir;
     // Cast de float a int.
     if( t1 ==0 && t2 == 1){
-        c.op = EQ;
+        c.op = EQUALS;
         strcpy(c.op1, "(int)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
@@ -1721,7 +1876,7 @@ char *reducir(char *dir, int t1, int t2){
     }
     // Cast de double a int.
     if( t1 ==0 && t2 == 2){
-        c.op = EQ;
+        c.op = EQUALS;
         strcpy(c.op1, "(int)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
@@ -1733,7 +1888,7 @@ char *reducir(char *dir, int t1, int t2){
     }        
     // Cast de double a float.
     if( t1 ==1 && t2 == 2) {
-        c.op = EQ;
+        c.op = EQUALS;
         strcpy(c.op1, "(float)");
         strcpy(c.op2, dir);
         strcpy(t, newTemp());
@@ -1858,7 +2013,7 @@ void yyerror2(char *c, char *c2){
  * Creada el 6 de diciembre de 2018.
  */
 void finish(){    
-    verificar_main()
+    verificar_main();
     print_code(&codigo_intermedio);    
 }
 
@@ -1878,8 +2033,6 @@ void finish(){
 void meter_assign(cuadrupla c[], int cou){
     for(int j = 0; j < cou; j++){
         insert_cuad(&codigo_intermedio, c[j]);
-        printf("metemos ass\n");
-        printf("%s, %s, %s, %d", c[j].op1, c[j].op2, c[j].res, c[j].op);
     }
 }
 

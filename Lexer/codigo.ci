@@ -1,14 +1,6 @@
-suma:t0 = a + b
-y = t0
-L2:goto L3
-main:param d
-param c
-t1 = call suma, 2
-d = t1
-L7:goto L6
-:t2 = 5 < 3
-if t2 goto I4
-goto I5
-goto L8
-if  goto I4
-L12:goto L13
+a::goto L3
+main:param b[0][1]
+param q
+t0 = call a, 2
+z = t0
+L6:goto L7

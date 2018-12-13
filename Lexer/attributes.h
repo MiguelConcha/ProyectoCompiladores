@@ -25,7 +25,7 @@ typedef struct _type{
 /* Para los argumentos de las funciones */
 typedef struct _args{
 	int num;
-	int lista_args[100];
+	int lista_args[100][2];
 } argumentos;
 
 /* Para la parte izquierda que se utiliza en la asignacion */
@@ -43,6 +43,8 @@ typedef struct _exp{
 	/* Dirección donde se guarda el resultado de la evaluación de la expresión */
 	char dir[32];
 	int type;
+	int tipo_basico;
+	int dims;
 	/* Número de cuadruplas que guardamos */
 	int count_codigo;
 } exp;
@@ -52,8 +54,12 @@ typedef struct _varr{
 	char dir[32];
 	typetab* tt;
 	int type;
+	int tipo_basico;
+	int dims;
 	/* Donde guardamos la representación en string del var arr */
 	char representacion[165];
+	int tamanios[100];
+	int indice_tamanios;
 } varr;
 
 /* Para los tokens de números */

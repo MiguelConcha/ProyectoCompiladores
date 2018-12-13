@@ -21,7 +21,7 @@ struct _symbol{
 	int type;
 	int dir;
 	int var;
-	int args[100];
+	int args[100][2];
 	int num_args;
 };
 
