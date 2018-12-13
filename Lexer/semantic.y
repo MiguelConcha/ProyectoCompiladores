@@ -95,7 +95,7 @@
 
     /* Para funciones */
     void verifica_call(char[], int[], int);
-
+    void verificar_main();
 %}
 
 /* Declaración de los atributos que utilizaremos para los no terminales y los tokens */
@@ -1846,6 +1846,7 @@ void yyerror2(char *c, char *c2){
  * Creada el 6 de diciembre de 2018.
  */
 void finish(){    
+    verificar_main()
     print_code(&codigo_intermedio);    
 }
 
@@ -1867,6 +1868,37 @@ void meter_assign(cuadrupla c[], int cou){
         insert_cuad(&codigo_intermedio, c[j]);
         printf("metemos ass\n");
         printf("%s, %s, %s, %d", c[j].op1, c[j].op2, c[j].res, c[j].op);
+    }
+}
+
+/**
+ * Función que verifica que exista la declaración de la función
+ * 'main' y que no haya funciones declaradas después de esta.
+ * 
+ * Autores: Concha Vázquez Miguel
+ *          Flores Martínez Andrés
+ *          Gladín García Ángel Iván
+ *          Sánchez Pérez Pedro Juan Salvador
+ *          Vázquez Salcedo Eduardo Eder
+ * 
+ * Creada el 12 de diciembre de 2018.
+ */
+void verificar_main() {
+    // Buscamos la función 'main' en la tabla de símbolos global.
+    int renglon = search(masterchef->st, "main");
+    // Error en caso de que no se haya declarado.
+    if (renglon == -1) {
+        yyerror("Error: La función 'main' no fue declarada. ");
+        exit(1);
+    }
+    // Recorremos desde el renglón en que fue declarada hacia abajo
+    // a ver si hay otra función, en cuyo caso habrá un error.
+    for (int i = renglon + 1; i < masterchef->st->count; i++) {
+        // Verificación de que haya una función.
+        if (masterchef->st->symbols[i].var == 1) {
+            yyerror("No puedes declarar funciones después del 'main'.");
+            exit(1);
+        }
     }
 }
 
