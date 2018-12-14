@@ -1,5 +1,0 @@
-func void main(int arg[], char b[][][]){
-	int z;
-	float b;
-	z=1;
-}

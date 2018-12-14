@@ -654,7 +654,7 @@ sent:
         insert_cuad(&codigo_intermedio, c1);
         backpatch(&$6.trues, label, &codigo_intermedio);
         backpatch(&$6.falses, label2, &codigo_intermedio);
-        printf("s->do s while(b)\n");
+        //printf("s->do s while(b)\n");
         breakeablecitos -= 1;
         siguiente_count++;
     }

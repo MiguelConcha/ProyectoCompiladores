@@ -1,2 +1,0 @@
-int z;
-if (true) z=1;

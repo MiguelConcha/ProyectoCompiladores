@@ -84,7 +84,7 @@ void print_table(symtab* st){
         // Obteniendo la representación de los argumentos.
         // Si no se cuenta, imprime una línea en blanco.
         // En el otro caso tienen que ir concatentando los tipos a una cadena.
-		if(st->symbols[i].var != 1) {
+		if(st->symbols[i].var != 1 || st->symbols[i].num_args == 0) {
 			strcpy(rep, "---");
 		} else {
 			for(int j = 0; j < st->symbols[i].num_args;j++){
