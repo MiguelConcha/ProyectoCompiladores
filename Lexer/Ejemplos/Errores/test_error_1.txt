@@ -1,0 +1,8 @@
+/*Ejemplo para probar las declaraciones indebidas*/
+int numerito;
+void invalidito;
+int arreglito[-1];
+
+func int main(void argc) {
+	return 0;
+}

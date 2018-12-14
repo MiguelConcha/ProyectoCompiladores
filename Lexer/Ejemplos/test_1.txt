@@ -1,0 +1,23 @@
+/*Ejemplo para probar solo las Declaraciones
+Sera una por cada tipo valida.*/
+
+int numerito, numero, numerote;
+float flotantito;
+double doublecito;
+char charsito;
+int arreglito [100];
+char cadenitas [5000000][100];
+double r3[1][2][3];
+struct {
+	int ulisesito;
+	struct {
+		double matrix[2][50000];
+		struct {
+			char inception[100000];
+		} migue;
+	} andres;
+} pedro;
+
+func int main (int argc, char argv[][]) {
+	return 0;
+}

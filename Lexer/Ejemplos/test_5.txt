@@ -1,0 +1,22 @@
+/*Archivo que muestra el uso correcto de una expresion y sus tipos*/
+
+int marina;
+double eli;
+float diana;
+int chacon;
+int emma;
+
+func int main () {
+	int intern;
+	double amor;
+
+	marina = 10;
+	eli = 9.9;
+	intern = marina + eli;
+	chacon = 10000;
+	diana = 1;
+	emma = 2;
+	amor = diana - emma;
+	amor = chacon + diana;
+	return 0;	
+}

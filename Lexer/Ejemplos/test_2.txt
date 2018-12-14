@@ -1,0 +1,22 @@
+/*Ejemplo para ver el uso correcto de una variable declarada*/
+
+int andres;
+struct {
+	int angel;
+} chef;
+int migue[100];
+func int main(int argc, char agrv[][]) {	
+	int eder;
+	struct {
+		int gladin;
+	} chefsito;
+	int pedro[10000];
+
+	chef.angel = 9000;
+	andres = -1;
+	migue[1] = 1;
+
+	chefsito.gladin = 9000;
+	eder = 100;
+	pedro[0] = 10;
+}

@@ -1,0 +1,14 @@
+/*Ejemplo que muestra el uso incorrecto de una funcion y su llamada a funcion*/
+
+int s;
+char a[10][20];
+char b[1][2][3];
+char c[1][2][3][4];
+
+func int main(int argc, char argv[][]) {
+	char d;
+	s = main(d, a);
+	s = main(s, b);
+	s = main(s, c[0][1][2]);
+	return 0;
+}

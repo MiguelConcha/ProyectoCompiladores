@@ -31,6 +31,12 @@
     extern int yylineno;
     extern FILE *yyin;
 
+    /*Archivo para gaurdar los errores*/
+    FILE * errores_sintacticos;
+
+    /*Variable auxilir para detectar si el programa tuvo errores*/
+    int hay_error = 0;
+
     /* Funciones para escribir errores */
     void yyerror(char *);
     void yyerror2(char*, char*);
@@ -214,16 +220,18 @@
 /* Regla de producción inicial.
    prog -> decls funcs */
 prog:
-    { init(); } decls 
+    { init(); 
+      errores_sintacticos = fopen("errores.txt", "w");
+    } 
+    decls 
     funcs   
     {
-        /* Imprimimos las tablas de tipo y símbolos y finalizamos. */
-        printf("Tabla de tipos\n");
-        print_type_table(masterchef->tt);
-        printf("Tabla de simbolos\n");
-        print_table(masterchef->st); 
-        printf("P -> D funcs\n");
-        finish(); 
+        fclose(errores_sintacticos);
+        if(hay_error) {
+            printf("El programa tiene errores sintacticos\n");
+        } else {
+            finish();
+        }
     }
 ;
 
@@ -236,7 +244,7 @@ decls:
          current_type = $1.type;
         if($1.type == 4) {
             yyerror("No puedes declarar variables tipo void\n");
-            exit(1);
+            
         }
         current_dim = $1.bytes;
         current_dim_arr = current_dim; 
@@ -342,11 +350,11 @@ arreglo:
             dimensión. */
         if ($2.type != 0) {
             yyerror("El número para declarar en el arreglo debe ser entero.");
-            exit(1);
+            
         }
         if ($2.val[0] == '-') {
             yyerror("Error: No se puede declarar dimensión negativa.");
-            exit(1);
+            
         }
         $$.tam = $4.tam + 1;
         current_dim_arr *= atoi($2.val);
@@ -431,11 +439,11 @@ funcs:
         cuadrupla c;
         char label2[32];
         strcpy(label2, newLabel());
-        c.op = GOTO;
+        c.op = LABEL;
         strcpy(c.op1, "");
         strcpy(c.op2, "");
         strcpy(c.res, label2);
-        insert_cuad(&codigo_intermedio, c);                
+        //insert_cuad(&codigo_intermedio, c);                
      } funcs 
      | /* empty */ 
 ;
@@ -460,7 +468,7 @@ lista_args:
 	lista_args COMMA tipo ID parte_arr  {
 		if($3.type == 4) {
 			yyerror("Los argumentos no pueden ser tipo void\n");
-			exit(1);
+			
 		}
         /* Agregamos a la tabla de simbolos y tipos el argumento de la función */
 		typerow renglon;
@@ -488,7 +496,7 @@ lista_args:
 	| tipo ID parte_arr {
 		if($1.type == 4) {
 			yyerror("Los argumentos no pueden ser tipo void\n");
-			exit(1);
+			
 		}
         /* Ponemos los casos base de la lista de argumentos y del número de argumentos */
 		$$.num = 1;
@@ -536,7 +544,7 @@ sents:
         strcpy(label, newLabel());                                
         $$ = $3;                
         backpatch(&$1, label, &codigo_intermedio);                
-        printf("ss->ss s\n");
+        //printf("ss->ss s\n");
     } 
     | sent {
         /* Hacemos Backbatch */
@@ -544,7 +552,7 @@ sents:
         strcpy(label, newLabel());
         $$ = $1;
         backpatch(&$1, label, &codigo_intermedio);
-        printf("ss->s\n");
+        //printf("ss->s\n");
     }
 ;
 
@@ -670,7 +678,7 @@ sent:
         backpatch(&$5.trues, label, &codigo_intermedio);
         backpatch(&$5.falses, label2, &codigo_intermedio);
         meter_assign($7.arr_codigo, $7.count_codigo);
-        printf("s->for(ass; cond; ass) sent\n");
+        //printf("s->for(ass; cond; ass) sent\n");
         breakeablecitos -= 1;
         siguiente_count--;
     }
@@ -682,7 +690,7 @@ sent:
         /* Verificamos el tipo de retorno con el de la función */
         if($2.type != current_function_type) {
             yyerror("tipo de retorno distinto al tipo de la funcion \n");
-            exit(1);
+            
         }
         /* Agregamos el goto adecuado */
         cuadrupla c1;
@@ -699,8 +707,15 @@ sent:
         /* Verificamos que el tipo de la función sea void */
         if(4 != current_function_type) {
             yyerror("tipo de retorno void distinto al tipo de la funcion \n");
-            exit(1);
         }
+        cuadrupla c1;
+        c1.op = GOTO;
+        char label1[32];
+        strcpy(label1, newLabel());
+        strcpy(c1.op1, "");
+        strcpy(c1.op2, "");
+        strcpy(c1.res, label1);
+        insert_cuad(&codigo_intermedio, c1);    
     }
     | LCURLYB sents RCURLYB {
         /* Aquí es donde se hace la concatenación de sentencias */
@@ -709,12 +724,12 @@ sent:
         strcpy(label, newLabel());                
         /* Se hace backpatch */
         backpatch(&$2, label, &codigo_intermedio);                                
-        printf("s->{ss}\n");
+        //printf("s->{ss}\n");
     }  
     | SWITCH LPAR exp RPAR {
 		if($3.type != 0) {
 			yyerror("La expresion del switch debe ser un numero entero\n");
-			exit(1);
+			
 		}
 		breakeablecitos++;
 		strcpy(siguiente_breakable_pila[siguiente_count], $<siguientes>$.label[0]);
@@ -730,7 +745,7 @@ sent:
         /* Verificamos que el break sea dentro de un break */
 		if(breakeablecitos < 1) {
 			yyerror("El break debe estar dentro de un ciclo \n");
-			exit(1);
+			
 		}
 		cuadrupla c1;
 		c1.op = GOTO;
@@ -746,7 +761,7 @@ sent:
         char i[32];
         strcpy(i, newIndex());
         $$ = create_list(i);
-        printf("s->print(e);\n");
+        //printf("s->print(e);\n");
     }
 ;
 
@@ -759,7 +774,7 @@ assign:
 		$$ = create_list(i);
 		/* asignacion es lo que hace todo el trabajo */
 		exp e = asignacion($1.id1, $1.id2, $3, $1.type); 
-		printf("S->parte_izq = E;\n");
+		//printf("S->parte_izq = E;\n");
 		int iterador;
 		$$.count_codigo = e.count_codigo;
 		for(iterador = 0; iterador < e.count_codigo; iterador++) {
@@ -821,7 +836,7 @@ casos:
         insert_cuad(&codigo_intermedio, c);
         insert_cuad(&codigo_intermedio, c1);
         insert_cuad(&codigo_intermedio, c2);
-        printf("B-> case num: sent \n");
+        //printf("B-> case num: sent \n");
 
         cuadrupla c3;
         c3.op = LABEL;
@@ -839,9 +854,9 @@ casos:
         insert_cuad(&codigo_intermedio, c);
 
      }
-     casos 
-     | DEFAULT sent 
-     | /* empty */
+     casos {}
+     | DEFAULT sent {} 
+     | /* empty */ {}
 ;
 
 /* Parte izquierda de una asignación.
@@ -865,7 +880,6 @@ var_arr:
 		}
 		if($3.dir[0] != 't' && $3.dir[0] == '-') {
 			yyerror("No puedes indexar el arreglo con un arreglo con un número negativo");
-			exit(1);
 		}
 		// Formando la cadena que representa a la variable de arreglo indexada.
 		strcpy($$.representacion, $1);
@@ -891,7 +905,7 @@ var_arr:
 				// que fue declarado con un número menor de dimensiones y reportamos el error. 
 				if($$.type == -1) {
 					yyerror("Mayor cantidad de dimensiones que las definidas");
-					exit(1);
+					
 				}
 				$$.tamanios[0] = it->tabla->tt->trs[$$.tipo_basico+1].tam;
 				int mydims = 1;
@@ -901,8 +915,8 @@ var_arr:
 					$$.tipo_basico = it->tabla->tt->trs[$$.tipo_basico].base.renglon;    
 				}
 				if($3.dir[0] != 't' && $$.tamanios[$$.indice_tamanios] <= atoi($3.dir)) {
-					yyerror("Index out of bounds exception\n");
-					exit(1);
+					//yyerror("Index out of bounds exception\n");
+					
 				}
 				$$.indice_tamanios++;
 				$$.dims = mydims - 1;
@@ -914,7 +928,7 @@ var_arr:
         // no había sido declarado antes y reportamos el error.
 		if(!encontrado) {
 			yyerror("El arreglo no fue declarado antes.\n");
-			exit(1);
+			
 		} 
         // Especificando que la tabla de tipos del lado izquierdo es la tabla a la que apunta el iterador. 
 		$$.tt = it->tabla->tt; }//valor   
@@ -932,12 +946,12 @@ var_arr:
 		}
 		if($3.dir[0] != 't' && $3.dir[0] == '-') {
             yyerror("No puedes indexar el arreglo con un arreglo con un número negativo");
-            exit(1);
+            
         }
         // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
 		if($1.type == -1) {
 			yyerror("Mayor cantidad de dimensiones que las definidas");
-			exit(1);
+			
 		}  
         // Checando el tipo del rengón del varr_arr del cuerpo de la producción.
 		int row_hijo = $1.type;
@@ -945,11 +959,11 @@ var_arr:
         // Comprobando si se indexó con más dimensiones de aquellas con que fue definido.
 		if($$.type == -1) {
 			yyerror("Mayor cantidad de dimensiones que las definidas");
-			exit(1);
+			
 		}  
 		if($3.dir[0] != 't' && $$.tamanios[$$.indice_tamanios] <= atoi($3.dir)) {
-			yyerror("Index out of bounds exceptionkk\n");
-			exit(1);
+			yyerror("Index out of bounds exception\n");
+			
 		}
 		$$.indice_tamanios++;
 
@@ -965,46 +979,46 @@ var_arr:
 exp:
     exp PLUS exp { 
         $$ = suma($1, $3); 
-        printf("E -> E + E\n"); 
+        //printf("E -> E + E\n"); 
     }  
     | exp MINUS exp { $$ = resta($1, $3); 
-        printf("E -> E - E\n");
+        //printf("E -> E - E\n");
     }  
     | exp PROD exp { 
         $$ = multiplicacion($1, $3); 
-        printf("E -> E * E\n");
+        //printf("E -> E * E\n");
     } 
     | exp DIV exp { 
         $$ = division($1, $3); 
-        printf("E -> E / E\n");
+        //printf("E -> E / E\n");
     } 
     | exp MOD exp { 
         $$ = modulo($1, $3); 
-        printf("E -> E mod E\n");
+        //printf("E -> E mod E\n");
     } 
     | var_arr { 
         $$ = envolver_varr($1); 
 		$$.tipo_basico = $1.tipo_basico;
 		$$.dims = $1.dims;
-        printf("E -> id[E]\n"); 
+        //printf("E -> id[E]\n"); 
     }
     | ID { 
         $$ = identificador($1); 
-        printf("E->id\n");
+        //printf("E->id\n");
     } 
     | CADENA { 
         // Pasando la cadena de la expresión regular a un tipo expresión.
         $$ = envolver_cadena($1); 
-        printf("E -> CADENA\n"); 
+        //printf("E -> CADENA\n"); 
     }
     | numero { 
         $$ = get_numero($1);
-        printf("E->numero\n");
+        //printf("E->numero\n");
     }
     | CARACTER { 
         // Pasando el carácter de la expresión regular a un tipo expresión.
         $$ = envolver_caracter($1); 
-        printf("E -> CARACTER\n");
+        //printf("E -> CARACTER\n");
     }
     | ID LPAR params RPAR {
         // Verificamos que la llama a la función sea válida 
@@ -1100,7 +1114,7 @@ cond:
         backpatch(&$1.falses, label, &codigo_intermedio);
         $$.trues = merge(&$1.trues, &$4.trues);
         $$.falses = $4.falses;
-        printf("b -> b || b\n");
+        //printf("b -> b || b\n");
     }
     | cond AND {
         // Creación de la cuadrupla con la operación de label.
@@ -1118,19 +1132,19 @@ cond:
         $$.trues = $4.trues;
         // Haciendo backpatch con la nueva etiqueta. 
         backpatch(&$1.trues, label, &codigo_intermedio);
-        printf("b -> b && b\n");
+        //printf("b -> b && b\n");
     }
     | NOT cond {
         // Se invierten flases y trues.
         $$.falses = $2.trues;
         $$.trues = $2.falses;
-        printf("b -> !b\n");
+        //printf("b -> !b\n");
     }
     | LPAR cond RPAR {
         // Dependen de los falses y trues de la condución del cuerpo.
         $$.trues = $2.trues;
         $$.falses = $2.falses;
-        printf("B->(B)\n");
+        //printf("B->(B)\n");
     }
     | exp rel exp {
         char i[32];
@@ -1168,7 +1182,7 @@ cond:
         insert_cuad(&codigo_intermedio, c);
         insert_cuad(&codigo_intermedio, c1);
         insert_cuad(&codigo_intermedio, c2);
-        printf("b->e rel e\n");
+        //printf("b->e rel e\n");
     }
     | TRUE {
         char i[32];
@@ -1182,7 +1196,7 @@ cond:
         strcpy(c.res, i);
         // Inserción de la cuadrupla.
         insert_cuad(&codigo_intermedio, c);
-        printf("b->true\n");
+        //printf("b->true\n");
     } 
     | FALSE {
         char i[32];
@@ -1196,7 +1210,7 @@ cond:
         strcpy(c.res, i);
         // Inserción de la cuadrupla.
         insert_cuad(&codigo_intermedio, c);
-        printf("b->false\n");
+        //printf("b->false\n");
     } 
 ;
 
@@ -1207,27 +1221,27 @@ cond:
 rel:
     LT { 
         $$ = LESS_THAN; 
-        printf("R-> <\n"); 
+        //printf("R-> <\n"); 
     }
     | GT { 
         $$ = GREATER_THAN; 
-        printf("R-> >\n");
+        //printf("R-> >\n");
     }
     | LEQ { 
         $$ = LESS_OR_EQUAL_THAN; 
-        printf("R-> <=\n");
+        //printf("R-> <=\n");
     }
     | GEQ { 
         $$ = GREATER_OR_EQUAL_THAN; 
-        printf("R-> >=\n");
+        //printf("R-> >=\n");
     }
     | NEQ { 
         $$ = NOT_EQUALS;
-        printf("R-> !=\n"); 
+        //printf("R-> !=\n"); 
     }
     | EQ { 
         $$ = EQUALS; 
-        printf("R-> ==\n");
+        //printf("R-> ==\n");
     } 
 ;
         
@@ -1459,7 +1473,7 @@ exp modulo(exp e1, exp e2){
     // Para hacer el módulo ambos tipos de las expresiones deben ser enteros.
     if(e1.type != 0 || e2.type != 0) {
         yyerror("Error: La operación módulo requiere operandos enteros.\n");
-        exit(1);
+        
     }
     exp e;
     cuadrupla c;
@@ -1506,7 +1520,7 @@ int get_tipo_tablas(char *id) {
         if (busqueda == -1) {
             // Si no está es porque no fue declarado antes.
             yyerror("Error: El identificador para la variable no fue declarada antes.\n");
-            exit(1);
+            
         } else {    
             // Si sí lo encontramos en la global, obtenemos su tipo.
             tipo = get_type(masterchef->st, id);
@@ -1538,14 +1552,14 @@ void verifica_call(char id[], int params[][2], int params_count) {
     if (renglon == -1) {
         // Error en caso de que no sea encontrada.
         yyerror("La funcion que quieres llamra no ha sido declarado\n");
-        exit(1);
+        
     }
     // Checando que sea llamda con el mismo número de argumentos con que fue declarada.
     if (masterchef->st->symbols[renglon].num_args != params_count) {
         char error[1000];
         strcpy(error, "El número de argumentos con la que fue llamada la función es incorrecto: ");
         yyerror2(error, id);
-        exit(1);
+        
     }
     // Checando que el tipo de los parámetros con que es llamda coincida con los de la declaración.
     for (int j = 0; j < params_count; j++) {
@@ -1553,7 +1567,7 @@ void verifica_call(char id[], int params[][2], int params_count) {
             char error[1000];
             strcpy(error, "Los tipos de los argumentos que ingresaste no son correcto con la funcion: ");
             yyerror2(error, id);
-            exit(1);
+            
         } 
     }
     
@@ -1574,13 +1588,13 @@ void verifica_call(char id[], int params[][2], int params_count) {
  * 
  * Creada el 10 de diciembre de 2018.
  */
-exp asignacion(char *id, char *id2, exp e, int trecibido){
+exp asignacion(char *id, char *id2, exp e, int trecibido) {
     // La expresión que será devuelta.
     exp e1;
     e1.count_codigo = 0;
     // Cuando no es un var_arr:
-    if(trecibido == -1) {
-        int tipo;
+    if (trecibido == -1) {
+        int tipo = -1;
         int es_estruct = 0;
         // Si no es de la forma id.id, el segundo id es vacío y podemos obtener el tipo del primero.
         if(strcmp(id2, "") == 0) {
@@ -1588,40 +1602,54 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
         } else {
             // En otro caso, es de la forma id.id, entonces debemos buscar el primer identificador.
             es_estruct = 1;
-            // Buscamos el id antes del punto en la tabla de símbolos para saber si fue declarado antes.
+            // Buscamos el id antes del punto en la tabla de símbolos global para saber si fue declarado antes.
             int renglon = search(masterchef->st, id);
-            if (renglon == -1) {
-                yyerror("El identificador no fue declarado\n");
-                exit(1);
-            }
-            // Tenemos la tabla de tipos global.
-            typetab tabla_tipos_actual= (*masterchef->tt);
-            // Vemos si es de tipo struct la variable para poder hacer lo de id.id.
-            int tiene_struct = tabla_tipos_actual.trs[masterchef->st->symbols[renglon].type].base.renglon;
-            // Si sí tiene:
-            if(tiene_struct == -2) {
-                symtab *st_struct = tabla_tipos_actual.trs[stack_masterchefs->tabla->st->symbols[renglon].type].base.smt->st;
-                // Buscando lo que hay después del punto en id.id.
-                int renglon2 = search(st_struct, id2);
-                if (renglon2 == -1) {
-                    // Si no lo encontramos, tenemos que buscar en la global.
-                    st_struct = tabla_tipos_actual.trs[masterchef->st->symbols[renglon].type].base.smt->st;
-                    renglon2 = search(st_struct, id2);
-                    // En este caso la estructura así antes.
-                    if(renglon2 == -1) {
-                        yyerror("El struct no fue declarado\n");
-                        exit(1);
+            if(renglon == -1) {
+                //Ya que no se encontro el id en la tabla global, lo buscamos en la tabla local
+                renglon = search(stack_masterchefs->tabla->st, id);
+                if(renglon == -1) {
+                    //En caso de que no se encontro en ningun lugar entonces gurdamos el error
+                    yyerror("El identificador no fue declarado\n");
+                } else {
+                    //Se encontro el id en la tabla local, ahora lo buscamos el segundo id en su tabla asociada
+                    renglon = stack_masterchefs->tabla->st->symbols[renglon].type;
+                    //revisamos que el tipo del id sea un struct
+                    if(stack_masterchefs->tabla->tt->trs[renglon].base.renglon != -2) {
+                        yyerror("el identificador que buscas no es parte de un struct");
+                    } else {
+                        //buscamos el segundo id en ls tabla se simbolos de la estructura
+                        int renglon2 = search(stack_masterchefs->tabla->tt->trs[renglon].base.smt->st, id2);
+                        if(renglon2 == -1) {
+                            //lanzamos error si no se encontro el segundo id
+                            yyerror("el identidicador que buscas no es parte de un struct");
+                        } else {
+                            //Encontramos el segundo id, obtenemos su tipo con la tabla de tipos asociada y guardamos su tipo.     
+                            renglon2 = stack_masterchefs->tabla->tt->trs[renglon].base.smt->st->symbols[renglon2].type; 
+                            tipo = stack_masterchefs->tabla->tt->trs[renglon].base.smt->tt->trs[renglon2].type;
+                        }
                     }
                 }
-                tipo = get_type(st_struct, id2);
-                // En el caso contrario hay un error semántico.
             } else {
-                yyerror2("Intento de acceso a atributo de no estructura: ", id);
-                exit(1);
+                //Se encontro el id en la tabla global, ahora lo buscamos el segundo id en su tabla de tipos asociada
+                renglon = masterchef->st->symbols[renglon].type;
+                //revisamos que el tipo del id sea un struct
+                if(masterchef->tt->trs[renglon].base.renglon != -2) {
+                    yyerror("el identificador que buscas no es parte de un struct");
+                } else {
+                    //buscamos el segundo id en ls tabla se simbolos de la estructura
+                    int renglon2 = search(masterchef->tt->trs[renglon].base.smt->st, id2);
+                    if(renglon2 == -1) {
+                        //lanzamos error si no se encontro el segundo id
+                        yyerror("el identidicador que buscas no es parte de un struct");
+                    } else {
+                        //Encontramos el segundo id, por lo que guardamos su tipo.
+                        renglon2 = masterchef->tt->trs[renglon].base.smt->st->symbols[renglon2].type;
+                        tipo = masterchef->tt->trs[renglon].base.smt->tt->trs[renglon2].type;
+                    }
+                }
             }
-        }
-
-        if( tipo != -1){        
+        }    
+        if ( tipo != -1) {        
             // El tipo de la expresión a devolver es el de la expresión luego de la asignación.
             e1.type = e.type;
             strcpy(e1.dir, id);
@@ -1629,7 +1657,11 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
             cuadrupla c;
             c.op = ASSIGNATION;
             // Colocando lo necesario de la cuadrupla.
-            strcpy(c.op1, reducir(e.dir, tipo, e.type));
+            if(reducir(e.dir, tipo, e.type) != NULL) { 
+                strcpy(c.op1, reducir(e.dir, tipo, e.type));
+            } else {
+                strcpy(c.op1, ampliar(e.dir, e.type, tipo));
+            }
             strcpy(c.op2, "");
             if(es_estruct == 1) {
                 char id_con_punto[65];
@@ -1646,8 +1678,7 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
             e1.count_codigo++;
         } else {
             // Caso para el error semántico.
-            yyerror("El identificador no fue declarado\n");
-            exit(1);
+            yyerror("El identificador no fue declarado\n"); 
         }
     } else { // Aquí se maneja el caso para var_arr.
         // VARARR
@@ -1656,7 +1687,11 @@ exp asignacion(char *id, char *id2, exp e, int trecibido){
         // Creando la cuadrupla.
         cuadrupla c;
         c.op = ASSIGNATION;
-        strcpy(c.op1, reducir(e.dir, trecibido, e.type));
+        if(reducir(e.dir, trecibido, e.type) != NULL) { 
+            strcpy(c.op1, reducir(e.dir, trecibido, e.type));
+        } else {
+            strcpy(c.op1, ampliar(e.dir, e.type, trecibido));
+        }
         strcpy(c.op2, "");
         // En este caso id es la representacin de var_arr.
         strcpy(c.res, id);//en este caso id es la representacin de vararr
@@ -1788,7 +1823,7 @@ exp identificador(char *id){
         } else {
             // Si no, entonces error porque no fue declarada antes.
             yyerror("Error: el identificador no existe");
-            exit(1);
+            
         }
     }
     return e;
@@ -1900,7 +1935,7 @@ char *reducir(char *dir, int t1, int t2){
     }
     // En otro caso hay un error semántico.  
     printf("Error: Asignacion inconsistente de tipos.\n");
-    exit(1);
+    return NULL;
 }
 
 /**
@@ -1981,7 +2016,10 @@ char* newIndex(){
  * Creada el 4 de diciembre de 2018.
  */
 void yyerror(char *msg) {
-    printf("%s\n", msg);
+    printf("Línea: %d\n%s\n", yylineno, msg);
+    hay_error = 1;
+    fprintf(errores_sintacticos,"Línea: %d\n%s\n", yylineno, msg);
+    exit(1);
 }
 
 /**
@@ -2014,6 +2052,12 @@ void yyerror2(char *c, char *c2){
  */
 void finish(){    
     verificar_main();
+    /* Imprimimos las tablas de tipo y símbolos y finalizamos. */
+    printf("Tabla de tipos\n");
+    print_type_table(masterchef->tt);
+    printf("Tabla de simbolos\n");
+    print_table(masterchef->st); 
+    //printf("P -> D funcs\n");
     print_code(&codigo_intermedio);    
 }
 
@@ -2054,7 +2098,7 @@ void verificar_main() {
     // Error en caso de que no se haya declarado.
     if (renglon == -1) {
         yyerror("Error: La función 'main' no fue declarada. ");
-        exit(1);
+        
     }
     // Recorremos desde el renglón en que fue declarada hacia abajo
     // a ver si hay otra función, en cuyo caso habrá un error.
@@ -2062,7 +2106,7 @@ void verificar_main() {
         // Verificación de que haya una función.
         if (masterchef->st->symbols[i].var == 1) {
             yyerror("No puedes declarar funciones después del 'main'.");
-            exit(1);
+            
         }
     }
 }

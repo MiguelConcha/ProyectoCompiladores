@@ -1170,7 +1170,7 @@ case 48:
 /* rule 48 can match eol */
 YY_RULE_SETUP
 #line 102 "lexer.l"
-{ increment(yytext); yylval.car.type = 3; yylval.car.val = yytext[0]; return CARACTER; }
+{ increment(yytext); yylval.car.type = 3; yylval.car.val = yytext[1]; return CARACTER; }
 	YY_BREAK
 case 49:
 /* rule 49 can match eol */

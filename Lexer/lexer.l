@@ -99,7 +99,7 @@ return					{ increment(yytext); return RETURN; }
 "%"						{ increment(yytext); return MOD; }
 "="						{ increment(yytext); return ASSIG; }
 
-{caracter}				{ increment(yytext); yylval.car.type = 3; yylval.car.val = yytext[0]; return CARACTER; }
+{caracter}				{ increment(yytext); yylval.car.type = 3; yylval.car.val = yytext[1]; return CARACTER; }
 {cadena}				{ increment(yytext); strcpy(yylval.cad.val, yytext); return CADENA; }
 {ID}					{ increment(yytext); strcpy(yylval.id, yytext); return ID; }
 {int}					{ increment(yytext); 

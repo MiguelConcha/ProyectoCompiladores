@@ -1,0 +1,13 @@
+/*Archivo que muestra cual es el uso correcto de una funcion y su valor de retorno*/
+
+func char chacon() {
+	return 'c';
+}
+
+func void pumasmas() {
+	return;
+}
+
+func int main() {
+	return 0;
+}
