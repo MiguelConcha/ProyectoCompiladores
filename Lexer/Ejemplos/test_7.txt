@@ -1,0 +1,16 @@
+/*Ejèmplo para ver el codigo de las estructuras de control*/
+
+int caramelo;
+
+func int main() {
+	
+	caramelo = 10;
+	do
+		switch(caramelo) {
+			case: 1 caramelo = 1;
+			case: 10 caramelo = 1000;
+			default: break;
+		}
+	while(caramelo <= 10);
+	return 0;
+}

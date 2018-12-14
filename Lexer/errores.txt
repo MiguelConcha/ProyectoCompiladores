@@ -1,0 +1,2 @@
+Línea: 7
+syntax error

@@ -1,4 +1,4 @@
-/*Archivo que muestra el uso correcto de una expresion y sus tipos*/
+/*Archivo que muestra el uso incorrecto de una expresion y sus tipos*/
 
 int marina;
 double eli;
@@ -8,14 +8,14 @@ int emma;
 
 func int main () {
 	int intern;
-	double amor;
+	char amor;
 
 	marina = 10;
 	eli = 9.9;
-	intern = marina + eli;
+	intern = marina + 'c';
 	chacon = 10000;
 	diana = 1;
-	emma = 2.5f;
+	emma = 2;
 	amor = diana - emma;
 	amor = chacon + diana;
 	return 0;	

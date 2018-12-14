@@ -1659,8 +1659,10 @@ exp asignacion(char *id, char *id2, exp e, int trecibido) {
             // Colocando lo necesario de la cuadrupla.
             if(reducir(e.dir, tipo, e.type) != NULL) { 
                 strcpy(c.op1, reducir(e.dir, tipo, e.type));
-            } else {
+            } else if (ampliar(e.dir, e.type, tipo) != NULL){
                 strcpy(c.op1, ampliar(e.dir, e.type, tipo));
+            } else {
+                yyerror("Asignacion inconsistente de tipos");
             }
             strcpy(c.op2, "");
             if(es_estruct == 1) {
@@ -1689,8 +1691,10 @@ exp asignacion(char *id, char *id2, exp e, int trecibido) {
         c.op = ASSIGNATION;
         if(reducir(e.dir, trecibido, e.type) != NULL) { 
             strcpy(c.op1, reducir(e.dir, trecibido, e.type));
-        } else {
+        } else if (ampliar(e.dir, e.type, trecibido) != NULL) {
             strcpy(c.op1, ampliar(e.dir, e.type, trecibido));
+        } else {
+                yyerror("Asignacion inconsistente de tipos");
         }
         strcpy(c.op2, "");
         // En este caso id es la representacin de var_arr.
@@ -1877,7 +1881,8 @@ char *ampliar(char *dir, int t1, int t2){
         // Insertando la cuadrupla en el código intermedio.
         insert_cuad(&codigo_intermedio, c);
         return t;
-    }            
+    }         
+    return NULL;   
 }
 
 /**
@@ -1933,8 +1938,6 @@ char *reducir(char *dir, int t1, int t2){
         printf("perdida de información se esta asignando un double a un float\n");
         return t;
     }
-    // En otro caso hay un error semántico.  
-    printf("Error: Asignacion inconsistente de tipos.\n");
     return NULL;
 }
 
@@ -2109,12 +2112,4 @@ void verificar_main() {
             
         }
     }
-}
-
-int main(int argc, char **argv) {
-    yyin = fopen(argv[1], "r");
-    int result = yyparse();
-    printf("resultado del analisis: %d\n", result);
-    fclose(yyin);
-    return 0;
 }

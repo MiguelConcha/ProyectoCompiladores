@@ -1,0 +1,5 @@
+/*Ejemplo para mostrar que siempre se necesita un main*/
+
+func int no_main() {
+	return 0;
+}

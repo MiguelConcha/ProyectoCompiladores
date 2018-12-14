@@ -1,0 +1,9 @@
+/*Ejemplo para mostrar el orden forzoso de la funcion main*/
+
+func int main() {
+	return 0;
+}
+
+func int no_main() {
+	return 0;
+}

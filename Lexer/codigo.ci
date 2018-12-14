@@ -1,21 +1,16 @@
-main:marina = 10
-L2:eli = 9.9
-L3:t1 = (double) == marina
-t0 = t1 + eli
-t2 = (int) == t0
-t3 = (int) == t0
-intern = t3
-L4:chacon = 10000
-L5:t4 = (float) == 1
-diana = t4
-L6:emma = 2
-L7:t6 = (float) == emma
-t5 = diana - t6
-t7 = (double) == t5
-amor = t7
-L8:t9 = (float) == chacon
-t8 = t9 + diana
-t10 = (double) == t8
-amor = t10
-L10:goto L9
+main:caramelo = 10
+L3:t0 = caramelo == 1
+if t0 goto I1
+goto I2
+I1:caramelo = 1
+I2:t1 = caramelo == 10
+if t1 goto I4
+goto I5
+I4:caramelo = 1000
+I5:goto L2
+t2 = caramelo <= 10
+if t2 goto I9
+goto I10
+if  goto I9
+L5:goto L4
 :
